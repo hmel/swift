@@ -35,7 +35,7 @@ void MIXImpl::joinChannelWithPreferences(const std::unordered_set<std::string>& 
         joinPayload->setForm(form);
     }
     auto request = std::make_shared<GenericRequest<MIXJoin>>(IQ::Set, getJID(), joinPayload, iqRouter_);
-    request->onResponse.connect(boost::bind(&MIXImpl::handleJoinResponse, this, _1, _2));
+    request->onResponse.connect(boost::bind(&MIXImpl::handleJoinResponse, this, boost::placeholders::_1, boost::placeholders::_2));
     request->send();
 }
 
@@ -47,7 +47,7 @@ void MIXImpl::updateSubscription(const std::unordered_set<std::string>& nodes) {
     auto updateSubscriptionPayload = std::make_shared<MIXUpdateSubscription>();
     updateSubscriptionPayload->setSubscriptions(nodes);
     auto request = std::make_shared<GenericRequest<MIXUpdateSubscription>>(IQ::Set, channelJID_, updateSubscriptionPayload, iqRouter_);
-    request->onResponse.connect(boost::bind(&MIXImpl::handleUpdateSubscriptionResponse, this, _1, _2));
+    request->onResponse.connect(boost::bind(&MIXImpl::handleUpdateSubscriptionResponse, this, boost::placeholders::_1, boost::placeholders::_2));
     request->send();
 }
 
@@ -59,7 +59,7 @@ void MIXImpl::leaveChannel() {
     auto leavePayload = std::make_shared<MIXLeave>();
     leavePayload->setChannel(channelJID_);
     auto request = std::make_shared<GenericRequest<MIXLeave>>(IQ::Set, getJID(), leavePayload, iqRouter_);
-    request->onResponse.connect(boost::bind(&MIXImpl::handleLeaveResponse, this, _1, _2));
+    request->onResponse.connect(boost::bind(&MIXImpl::handleLeaveResponse, this, boost::placeholders::_1, boost::placeholders::_2));
     request->send();
 }
 
@@ -70,7 +70,7 @@ void MIXImpl::handleLeaveResponse(MIXLeave::ref payload, ErrorPayload::ref error
 void MIXImpl::requestPreferencesForm() {
     auto prefPayload = std::make_shared<MIXUserPreference>();
     auto request = std::make_shared<GenericRequest<MIXUserPreference>>(IQ::Get, channelJID_, prefPayload, iqRouter_);
-    request->onResponse.connect(boost::bind(&MIXImpl::handlePreferencesFormReceived, this, _1, _2));
+    request->onResponse.connect(boost::bind(&MIXImpl::handlePreferencesFormReceived, this, boost::placeholders::_1, boost::placeholders::_2));
     request->send();
 }
 
@@ -90,7 +90,7 @@ void MIXImpl::updatePreferences(Form::ref form) {
     auto prefPayload = std::make_shared<MIXUserPreference>();
     prefPayload->setData(form);
     auto request = std::make_shared<GenericRequest<MIXUserPreference>>(IQ::Set, channelJID_, prefPayload, iqRouter_);
-    request->onResponse.connect(boost::bind(&MIXImpl::handlePreferencesResultReceived, this, _1, _2));
+    request->onResponse.connect(boost::bind(&MIXImpl::handlePreferencesResultReceived, this, boost::placeholders::_1, boost::placeholders::_2));
     request->send();
 }
 
