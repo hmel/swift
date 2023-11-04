@@ -205,6 +205,69 @@ set(SWIFTEN_SRCS
   Base/String.cpp
   Base/URL.cpp
   Base/sleep.cpp
+
+  AdHoc/OutgoingAdHocCommandSession.cpp
+
+  TLS/Certificate.cpp
+  TLS/CertificateFactory.cpp
+  TLS/CertificateTrustChecker.cpp
+  TLS/PrivateKey.cpp
+  TLS/ServerIdentityVerifier.cpp
+  TLS/TLSContext.cpp
+  TLS/TLSContextFactory.cpp
+  TLS/OpenSSL/OpenSSLContext.cpp
+  TLS/OpenSSL/OpenSSLCertificate.cpp
+  TLS/OpenSSL/OpenSSLContextFactory.cpp
+  TLS/OpenSSL/OpenSSLCertificateFactory.cpp
+  TLS/PlatformTLSFactories.cpp
+
+  Network/ProxiedConnection.cpp
+  Network/HTTPConnectProxiedConnection.cpp
+  Network/HTTPConnectProxiedConnectionFactory.cpp
+  Network/SOCKS5ProxiedConnection.cpp
+  Network/SOCKS5ProxiedConnectionFactory.cpp
+  Network/BoostConnection.cpp
+  Network/BoostConnectionFactory.cpp
+  Network/BoostConnectionServer.cpp
+  Network/BoostConnectionServerFactory.cpp
+  Network/BoostIOServiceThread.cpp
+  Network/BOSHConnection.cpp
+  Network/BOSHConnectionPool.cpp
+  Network/CachingDomainNameResolver.cpp
+  Network/ConnectionFactory.cpp
+  Network/ConnectionServer.cpp
+  Network/ConnectionServerFactory.cpp
+  Network/DummyConnection.cpp
+  Network/FakeConnection.cpp
+  Network/ChainedConnector.cpp
+  Network/Connector.cpp
+  Network/Connection.cpp
+  Network/TimerFactory.cpp
+  Network/DummyTimerFactory.cpp
+  Network/BoostTimerFactory.cpp
+  Network/DomainNameResolver.cpp
+  Network/DomainNameAddressQuery.cpp
+  Network/DomainNameServiceQuery.cpp
+  Network/StaticDomainNameResolver.cpp
+  Network/HostAddress.cpp
+  Network/HostAddressPort.cpp
+  Network/HostNameOrAddress.cpp
+  Network/NetworkFactories.cpp
+  Network/BoostNetworkFactories.cpp
+  Network/NetworkEnvironment.cpp
+  Network/Timer.cpp
+  Network/TLSConnection.cpp
+  Network/TLSConnectionFactory.cpp
+  Network/BoostTimer.cpp
+  Network/ProxyProvider.cpp
+  Network/NullProxyProvider.cpp
+  Network/NATTraverser.cpp
+  Network/NullNATTraverser.cpp
+  Network/NATTraversalGetPublicIPRequest.cpp
+  Network/NATTraversalForwardPortRequest.cpp
+  Network/NATTraversalRemovePortForwardingRequest.cpp
+  Network/NATTraversalInterface.cpp
+  Network/HTTPTrafficFilter.cpp
 )
 
 add_library(swiften ${SWIFTEN_SRCS})

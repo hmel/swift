@@ -2,6 +2,12 @@ project(swift)
 
 set(SWIFT_SRCS
   main.cpp
+
+  FreeDesktopNotifier.cpp
+  QtDBUSURIHandler.cpp
+
+  QtCertificateViewerDialog.cpp
+
   ChatList/ChatListDelegate.cpp
   ChatList/ChatListModel.cpp
   ChatList/ChatListMUCItem.cpp
@@ -106,6 +112,7 @@ set(SWIFT_SRCS
   QtWebKitChatView.cpp
   QtWebView.cpp
   QtXMLConsoleWidget.cpp
+  QtCertificateViewerDialog.cpp
   Roster/DelegateCommons.cpp
   Roster/GroupItemDelegate.cpp
   Roster/QtFilterWidget.cpp
@@ -136,6 +143,26 @@ set(SWIFT_SRCS
   Whiteboard/GView.cpp
   Whiteboard/QtWhiteboardWindow.cpp
   Whiteboard/TextDialog.cpp
+
+  QtVCardWidget/QtCloseButton.cpp
+  QtVCardWidget/QtRemovableItemDelegate.cpp
+  QtVCardWidget/QtResizableLineEdit.cpp
+  QtVCardWidget/QtTagComboBox.cpp
+  QtVCardWidget/QtVCardHomeWork.cpp
+  QtVCardWidget/QtVCardAddressField.cpp
+  QtVCardWidget/QtVCardAddressLabelField.cpp
+  QtVCardWidget/QtVCardBirthdayField.cpp
+  QtVCardWidget/QtVCardDescriptionField.cpp
+  QtVCardWidget/QtVCardInternetEMailField.cpp
+  QtVCardWidget/QtVCardJIDField.cpp
+  QtVCardWidget/QtVCardOrganizationField.cpp
+  QtVCardWidget/QtVCardPhotoAndNameFields.cpp
+  QtVCardWidget/QtVCardRoleField.cpp
+  QtVCardWidget/QtVCardTelephoneField.cpp
+  QtVCardWidget/QtVCardTitleField.cpp
+  QtVCardWidget/QtVCardURLField.cpp
+  QtVCardWidget/QtVCardGeneralField.cpp
+  QtVCardWidget/QtVCardWidget.cpp
 )
 
 
@@ -156,6 +183,8 @@ target_link_libraries(Swift Qt5::Core Qt5::Gui Qt5::DBus Qt5::X11Extras Qt5::Wid
   Boost::program_options
   Boost::serialization
   swiften
-  swift_controllers)
+  swift_controllers
+  swift_tools
+)
 
-target_include_directories(Swift PRIVATE ../../)
+target_include_directories(Swift PRIVATE ../../ ../ QtVCardWidget/)
