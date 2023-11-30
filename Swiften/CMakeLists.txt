@@ -1,7 +1,10 @@
+add_compile_options(-DSWIFT_EXPERIMENTAL_FT -DSWIFTEN_BUILDING -DLIBIDN_STATIC -DSWIFTEN_STATIC -DHAVE_OPENSSL_CRYPTO_PROVIDER -DSWIFT_EXPERIMENTAL_FT -DSWIFTEN_BUILDING -DSWIFTEN_STATIC -DNEED_IDN -DLIBIDN_STATIC -DHAVE_LIBIDN)
+
 set(SWIFTEN_SRCS
   Base/Debug.cpp
   Chat/ChatStateTracker.cpp
   Chat/ChatStateNotifier.cpp
+
   Client/ClientSessionStanzaChannel.cpp
   Client/CoreClient.cpp
   Client/Client.cpp
@@ -11,11 +14,12 @@ set(SWIFTEN_SRCS
   Client/BlockListImpl.cpp
   Client/ClientBlockListManager.cpp
   Client/MemoryStorages.cpp
-  Client/NickResolver.cpp
   Client/NickManager.cpp
   Client/NickManagerImpl.cpp
   Client/Storages.cpp
   Client/XMLBeautifier.cpp
+  Client/NickResolver.cpp
+
   Compress/ZLibCodecompressor.cpp
   Compress/ZLibDecompressor.cpp
   Compress/ZLibCompressor.cpp
@@ -268,6 +272,366 @@ set(SWIFTEN_SRCS
   Network/NATTraversalRemovePortForwardingRequest.cpp
   Network/NATTraversalInterface.cpp
   Network/HTTPTrafficFilter.cpp
+  Network/PlatformNATTraversalWorker.cpp
+  Network/UnixProxyProvider.cpp
+  Network/PlatformDomainNameResolver.cpp
+  Network/UnixNetworkEnvironment.cpp
+  Network/EnvironmentProxyProvider.cpp
+  Network/UnixProxyProvider.cpp
+  Network/PlatformDomainNameServiceQuery.cpp
+  Network/PlatformDomainNameAddressQuery.cpp
+
+  Crypto/CryptoProvider.cpp
+  Crypto/Hash.cpp
+  Crypto/OpenSSLCryptoProvider.cpp
+  Crypto/PlatformCryptoProvider.cpp
+
+
+  EventLoop/BoostASIOEventLoop.cpp
+  EventLoop/DummyEventLoop.cpp
+  EventLoop/Event.cpp
+  EventLoop/EventLoop.cpp
+  EventLoop/EventOwner.cpp
+  EventLoop/SimpleEventLoop.cpp
+  EventLoop/SingleThreadedEventLoop.cpp
+
+  IDN/IDNConverter.cpp
+  IDN/LibIDNConverter.cpp
+  IDN/PlatformIDNConverter.cpp
+
+  Parser/AttributeMap.cpp
+  Parser/AuthRequestParser.cpp
+  Parser/AuthChallengeParser.cpp
+  Parser/AuthSuccessParser.cpp
+  Parser/AuthResponseParser.cpp
+  Parser/CompressParser.cpp
+  Parser/ElementParser.cpp
+  Parser/IQParser.cpp
+  Parser/MessageParser.cpp
+  Parser/PayloadParser.cpp
+  Parser/StanzaAckParser.cpp
+  Parser/BOSHBodyExtractor.cpp
+  Parser/ComponentHandshakeParser.cpp
+  Parser/PayloadParserFactory.cpp
+  Parser/PayloadParserFactoryCollection.cpp
+  Parser/PayloadParsers/BodyParser.cpp
+  Parser/PayloadParsers/SubjectParser.cpp
+  Parser/PayloadParsers/ThreadParser.cpp
+  Parser/PayloadParsers/CarbonsEnableParser.cpp
+  Parser/PayloadParsers/CarbonsDisableParser.cpp
+  Parser/PayloadParsers/CarbonsPrivateParser.cpp
+  Parser/PayloadParsers/CarbonsReceivedParser.cpp
+  Parser/PayloadParsers/CarbonsSentParser.cpp
+  Parser/PayloadParsers/ChatStateParser.cpp
+  Parser/PayloadParsers/ClientStateParser.cpp
+  Parser/PayloadParsers/CapsInfoParser.cpp
+  Parser/PayloadParsers/DiscoInfoParser.cpp
+  Parser/PayloadParsers/DiscoItemsParser.cpp
+  Parser/PayloadParsers/ErrorParser.cpp
+  Parser/PayloadParsers/FormParser.cpp
+  Parser/PayloadParsers/IBBParser.cpp
+  Parser/PayloadParsers/JingleParser.cpp
+  Parser/PayloadParsers/JingleReasonParser.cpp
+  Parser/PayloadParsers/JingleContentPayloadParser.cpp
+  Parser/PayloadParsers/JingleIBBTransportMethodPayloadParser.cpp
+  Parser/PayloadParsers/JingleS5BTransportMethodPayloadParser.cpp
+  Parser/PayloadParsers/JingleFileTransferDescriptionParser.cpp
+  Parser/PayloadParsers/JingleFileTransferHashParser.cpp
+  Parser/PayloadParsers/JingleFileTransferFileInfoParser.cpp
+  Parser/PayloadParsers/StreamInitiationFileInfoParser.cpp
+  Parser/PayloadParsers/CommandParser.cpp
+  Parser/PayloadParsers/InBandRegistrationPayloadParser.cpp
+  Parser/PayloadParsers/SearchPayloadParser.cpp
+  Parser/PayloadParsers/FullPayloadParserFactoryCollection.cpp
+  Parser/PayloadParsers/PriorityParser.cpp
+  Parser/PayloadParsers/PrivateStorageParser.cpp
+  Parser/PayloadParsers/RawXMLPayloadParser.cpp
+  Parser/PayloadParsers/ReferencePayloadParser.cpp
+  Parser/PayloadParsers/ResourceBindParser.cpp
+  Parser/PayloadParsers/RosterItemExchangeParser.cpp
+  Parser/PayloadParsers/RosterParser.cpp
+  Parser/PayloadParsers/SecurityLabelParser.cpp
+  Parser/PayloadParsers/SecurityLabelsCatalogParser.cpp
+  Parser/PayloadParsers/SoftwareVersionParser.cpp
+  Parser/PayloadParsers/StorageParser.cpp
+  Parser/PayloadParsers/StatusParser.cpp
+  Parser/PayloadParsers/StatusShowParser.cpp
+  Parser/PayloadParsers/StreamInitiationParser.cpp
+  Parser/PayloadParsers/BytestreamsParser.cpp
+  Parser/PayloadParsers/VCardParser.cpp
+  Parser/PayloadParsers/VCardUpdateParser.cpp
+  Parser/PayloadParsers/DelayParser.cpp
+  Parser/PayloadParsers/MIXParticipantParser.cpp
+  Parser/PayloadParsers/MIXSetNickParser.cpp
+  Parser/PayloadParsers/MIXRegisterNickParser.cpp
+  Parser/PayloadParsers/MIXDestroyParser.cpp
+  Parser/PayloadParsers/MIXCreateParser.cpp
+  Parser/PayloadParsers/MIXPayloadParser.cpp
+  Parser/PayloadParsers/MIXLeaveParser.cpp
+  Parser/PayloadParsers/MIXJoinParser.cpp
+  Parser/PayloadParsers/MIXUserPreferenceParser.cpp
+  Parser/PayloadParsers/MIXUpdateSubscriptionParser.cpp
+  Parser/PayloadParsers/MUCUserPayloadParser.cpp
+  Parser/PayloadParsers/MUCAdminPayloadParser.cpp
+  Parser/PayloadParsers/MUCOwnerPayloadParser.cpp
+  Parser/PayloadParsers/MUCDestroyPayloadParser.cpp
+  Parser/PayloadParsers/MUCInvitationPayloadParser.cpp
+  Parser/PayloadParsers/MUCItemParser.cpp
+  Parser/PayloadParsers/NicknameParser.cpp
+  Parser/PayloadParsers/ReplaceParser.cpp
+  Parser/PayloadParsers/LastParser.cpp
+  Parser/PayloadParsers/IdleParser.cpp
+  Parser/PayloadParsers/S5BProxyRequestParser.cpp
+  Parser/PayloadParsers/DeliveryReceiptParser.cpp
+  Parser/PayloadParsers/DeliveryReceiptRequestParser.cpp
+  Parser/PayloadParsers/UserLocationParser.cpp
+  Parser/PayloadParsers/UserTuneParser.cpp
+  Parser/PayloadParsers/WhiteboardParser.cpp
+  Parser/PayloadParsers/PubSubErrorParserFactory.cpp
+  Parser/PayloadParsers/ResultSetParser.cpp
+  Parser/PayloadParsers/ForwardedParser.cpp
+  Parser/PayloadParsers/MAMFinParser.cpp
+  Parser/PayloadParsers/MAMResultParser.cpp
+  Parser/PayloadParsers/MAMQueryParser.cpp
+  Parser/PayloadParsers/IsodeIQDelegationParser.cpp
+  Parser/PlatformXMLParserFactory.cpp
+  Parser/PresenceParser.cpp
+  Parser/SerializingParser.cpp
+  Parser/StanzaParser.cpp
+  Parser/StreamErrorParser.cpp
+  Parser/StreamFeaturesParser.cpp
+  Parser/StreamManagementEnabledParser.cpp
+  Parser/StreamResumeParser.cpp
+  Parser/StreamResumedParser.cpp
+  Parser/Tree/ParserElement.cpp
+  Parser/Tree/NullParserElement.cpp
+  Parser/Tree/TreeReparser.cpp
+  Parser/XMLParser.cpp
+  Parser/XMLParserClient.cpp
+  Parser/XMLParserFactory.cpp
+  Parser/XMPPParser.cpp
+  Parser/XMPPParserClient.cpp
+  Parser/ExpatParser.cpp
+
+  FileTransfer/ByteArrayReadBytestream.cpp
+  FileTransfer/DefaultFileTransferTransporter.cpp
+  FileTransfer/DefaultFileTransferTransporterFactory.cpp
+  FileTransfer/FailingTransportSession.cpp
+  FileTransfer/FileReadBytestream.cpp
+  FileTransfer/FileTransfer.cpp
+  FileTransfer/FileTransferManager.cpp
+  FileTransfer/FileTransferManagerImpl.cpp
+  FileTransfer/FileTransferOptions.cpp
+  FileTransfer/FileTransferTransporter.cpp
+  FileTransfer/FileTransferTransporterFactory.cpp
+  FileTransfer/FileWriteBytestream.cpp
+  FileTransfer/IBBReceiveSession.cpp
+  FileTransfer/IBBReceiveTransportSession.cpp
+  FileTransfer/IBBSendSession.cpp
+  FileTransfer/IBBSendTransportSession.cpp
+  FileTransfer/IncomingFileTransfer.cpp
+  FileTransfer/IncomingFileTransferManager.cpp
+  FileTransfer/IncomingJingleFileTransfer.cpp
+  FileTransfer/IncrementalBytestreamHashCalculator.cpp
+  FileTransfer/JingleFileTransfer.cpp
+  FileTransfer/LocalJingleTransportCandidateGenerator.cpp
+  FileTransfer/OutgoingFileTransfer.cpp
+  FileTransfer/OutgoingFileTransferManager.cpp
+  FileTransfer/OutgoingJingleFileTransfer.cpp
+  FileTransfer/ReadBytestream.cpp
+  FileTransfer/RemoteJingleTransportCandidateSelector.cpp
+  FileTransfer/SOCKS5BytestreamClientSession.cpp
+  FileTransfer/SOCKS5BytestreamProxiesManager.cpp
+  FileTransfer/SOCKS5BytestreamProxyFinder.cpp
+  FileTransfer/SOCKS5BytestreamRegistry.cpp
+  FileTransfer/SOCKS5BytestreamServer.cpp
+  FileTransfer/SOCKS5BytestreamServerManager.cpp
+  FileTransfer/SOCKS5BytestreamServerPortForwardingUser.cpp
+  FileTransfer/SOCKS5BytestreamServerResourceUser.cpp
+  FileTransfer/SOCKS5BytestreamServerSession.cpp
+  FileTransfer/TransportSession.cpp
+  FileTransfer/WriteBytestream.cpp
+
+  VCards/VCardManager.cpp
+  VCards/VCardStorage.cpp
+
+  Disco/CapsInfoGenerator.cpp
+  Disco/CapsManager.cpp
+  Disco/EntityCapsManager.cpp
+  Disco/EntityCapsProvider.cpp
+  Disco/DummyEntityCapsProvider.cpp
+  Disco/CapsStorage.cpp
+  Disco/ClientDiscoManager.cpp
+  Disco/DiscoInfoResponder.cpp
+  Disco/JIDDiscoInfoResponder.cpp
+  Disco/DiscoServiceWalker.cpp
+  Disco/FeatureOracle.cpp
+
+  Presence/PresenceOracle.cpp
+  Presence/PresenceSender.cpp
+  Presence/DirectedPresenceSender.cpp
+  Presence/PayloadAddingPresenceSender.cpp
+  Presence/StanzaChannelPresenceSender.cpp
+  Presence/SubscriptionManager.cpp
+
+  Elements/PubSub.cpp
+  Elements/PubSubAffiliations.cpp
+  Elements/PubSubAffiliation.cpp
+  Elements/PubSubConfigure.cpp
+  Elements/PubSubCreate.cpp
+  Elements/PubSubDefault.cpp
+  Elements/PubSubItems.cpp
+  Elements/PubSubItem.cpp
+  Elements/PubSubOptions.cpp
+  Elements/PubSubPublish.cpp
+  Elements/PubSubRetract.cpp
+  Elements/PubSubSubscribeOptions.cpp
+  Elements/PubSubSubscribe.cpp
+  Elements/PubSubSubscriptions.cpp
+  Elements/PubSubSubscription.cpp
+  Elements/PubSubUnsubscribe.cpp
+  Elements/PubSubEvent.cpp
+  Elements/PubSubEventAssociate.cpp
+  Elements/PubSubEventCollection.cpp
+  Elements/PubSubEventConfiguration.cpp
+  Elements/PubSubEventDelete.cpp
+  Elements/PubSubEventDisassociate.cpp
+  Elements/PubSubEventItem.cpp
+  Elements/PubSubEventItems.cpp
+  Elements/PubSubEventPurge.cpp
+  Elements/PubSubEventRedirect.cpp
+  Elements/PubSubEventRetract.cpp
+  Elements/PubSubEventSubscription.cpp
+  Elements/PubSubOwnerAffiliation.cpp
+  Elements/PubSubOwnerAffiliations.cpp
+  Elements/PubSubOwnerConfigure.cpp
+  Elements/PubSubOwnerDefault.cpp
+  Elements/PubSubOwnerDelete.cpp
+  Elements/PubSubOwnerPubSub.cpp
+  Elements/PubSubOwnerPurge.cpp
+  Elements/PubSubOwnerRedirect.cpp
+  Elements/PubSubOwnerSubscription.cpp
+  Elements/PubSubOwnerSubscriptions.cpp
+  Elements/PubSubError.cpp
+
+  Avatars/VCardUpdateAvatarManager.cpp
+  Avatars/VCardAvatarManager.cpp
+  Avatars/OfflineAvatarManager.cpp
+  Avatars/AvatarManager.cpp
+  Avatars/AvatarManagerImpl.cpp
+  Avatars/AvatarStorage.cpp
+  Avatars/AvatarProvider.cpp
+  Avatars/CombinedAvatarProvider.cpp
+
+  Jingle/JingleSession.cpp
+  Jingle/JingleSessionListener.cpp
+  Jingle/AbstractJingleSessionListener.cpp
+  Jingle/JingleSessionImpl.cpp
+  Jingle/IncomingJingleSessionHandler.cpp
+  Jingle/JingleSessionManager.cpp
+  Jingle/JingleResponder.cpp
+  Jingle/FakeJingleSession.cpp
+
+  StreamManagement/StanzaAckRequester.cpp
+  StreamManagement/StanzaAckResponder.cpp
+
+  SASL/ClientAuthenticator.cpp
+  SASL/EXTERNALClientAuthenticator.cpp
+  SASL/PLAINClientAuthenticator.cpp
+  SASL/PLAINMessage.cpp
+  SASL/SCRAMSHA1ClientAuthenticator.cpp
+  SASL/DIGESTMD5Properties.cpp
+  SASL/DIGESTMD5ClientAuthenticator.cpp
+
+  Serializer/PayloadSerializers/PubSubSerializer.cpp
+  Serializer/PayloadSerializers/PubSubAffiliationsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubAffiliationSerializer.cpp
+  Serializer/PayloadSerializers/PubSubConfigureSerializer.cpp
+  Serializer/PayloadSerializers/PubSubCreateSerializer.cpp
+  Serializer/PayloadSerializers/PubSubDefaultSerializer.cpp
+  Serializer/PayloadSerializers/PubSubItemsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubItemSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOptionsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubPublishSerializer.cpp
+  Serializer/PayloadSerializers/PubSubRetractSerializer.cpp
+  Serializer/PayloadSerializers/PubSubSubscribeOptionsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubSubscribeSerializer.cpp
+  Serializer/PayloadSerializers/PubSubSubscriptionsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubSubscriptionSerializer.cpp
+  Serializer/PayloadSerializers/PubSubUnsubscribeSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventAssociateSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventCollectionSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventConfigurationSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventDeleteSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventDisassociateSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventItemSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventItemsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventPurgeSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventRedirectSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventRetractSerializer.cpp
+  Serializer/PayloadSerializers/PubSubEventSubscriptionSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerAffiliationSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerAffiliationsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerConfigureSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerDefaultSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerDeleteSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerPubSubSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerPurgeSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerRedirectSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerSubscriptionSerializer.cpp
+  Serializer/PayloadSerializers/PubSubOwnerSubscriptionsSerializer.cpp
+  Serializer/PayloadSerializers/PubSubErrorSerializer.cpp
+
+  StreamStack/HighLayer.cpp
+  StreamStack/LowLayer.cpp
+  StreamStack/StreamStack.cpp
+  StreamStack/ConnectionLayer.cpp
+  StreamStack/TLSLayer.cpp
+  StreamStack/WhitespacePingLayer.cpp
+  StreamStack/XMPPLayer.cpp
+
+  Parser/PayloadParsers/PubSubParser.cpp
+  Parser/PayloadParsers/PubSubAffiliationsParser.cpp
+  Parser/PayloadParsers/PubSubAffiliationParser.cpp
+  Parser/PayloadParsers/PubSubConfigureParser.cpp
+  Parser/PayloadParsers/PubSubCreateParser.cpp
+  Parser/PayloadParsers/PubSubDefaultParser.cpp
+  Parser/PayloadParsers/PubSubItemsParser.cpp
+  Parser/PayloadParsers/PubSubItemParser.cpp
+  Parser/PayloadParsers/PubSubOptionsParser.cpp
+  Parser/PayloadParsers/PubSubPublishParser.cpp
+  Parser/PayloadParsers/PubSubRetractParser.cpp
+  Parser/PayloadParsers/PubSubSubscribeOptionsParser.cpp
+  Parser/PayloadParsers/PubSubSubscribeParser.cpp
+  Parser/PayloadParsers/PubSubSubscriptionsParser.cpp
+  Parser/PayloadParsers/PubSubSubscriptionParser.cpp
+  Parser/PayloadParsers/PubSubUnsubscribeParser.cpp
+  Parser/PayloadParsers/PubSubEventParser.cpp
+  Parser/PayloadParsers/PubSubEventAssociateParser.cpp
+  Parser/PayloadParsers/PubSubEventCollectionParser.cpp
+  Parser/PayloadParsers/PubSubEventConfigurationParser.cpp
+  Parser/PayloadParsers/PubSubEventDeleteParser.cpp
+  Parser/PayloadParsers/PubSubEventDisassociateParser.cpp
+  Parser/PayloadParsers/PubSubEventItemParser.cpp
+  Parser/PayloadParsers/PubSubEventItemsParser.cpp
+  Parser/PayloadParsers/PubSubEventPurgeParser.cpp
+  Parser/PayloadParsers/PubSubEventRedirectParser.cpp
+  Parser/PayloadParsers/PubSubEventRetractParser.cpp
+  Parser/PayloadParsers/PubSubEventSubscriptionParser.cpp
+  Parser/PayloadParsers/PubSubOwnerAffiliationParser.cpp
+  Parser/PayloadParsers/PubSubOwnerAffiliationsParser.cpp
+  Parser/PayloadParsers/PubSubOwnerConfigureParser.cpp
+  Parser/PayloadParsers/PubSubOwnerDefaultParser.cpp
+  Parser/PayloadParsers/PubSubOwnerDeleteParser.cpp
+  Parser/PayloadParsers/PubSubOwnerPubSubParser.cpp
+  Parser/PayloadParsers/PubSubOwnerPurgeParser.cpp
+  Parser/PayloadParsers/PubSubOwnerRedirectParser.cpp
+  Parser/PayloadParsers/PubSubOwnerSubscriptionParser.cpp
+  Parser/PayloadParsers/PubSubOwnerSubscriptionsParser.cpp
+  Parser/PayloadParsers/PubSubErrorParser.cpp
+
+
 )
 
 add_library(swiften ${SWIFTEN_SRCS})

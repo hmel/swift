@@ -7,6 +7,7 @@
 #include <Swift/QtUI/QtAdHocCommandWithJIDWindow.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <QBoxLayout>
 #include <QDialogButtonBox>
@@ -22,7 +23,7 @@
 #include <Swift/QtUI/QtSwiftUtil.h>
 
 namespace Swift {
-QtAdHocCommandWithJIDWindow::QtAdHocCommandWithJIDWindow(UIEventStream* uiEventStream) : uiEventStream_(uiEventStream) {
+  QtAdHocCommandWithJIDWindow::QtAdHocCommandWithJIDWindow(UIEventStream* uiEventStream) : uiEventStream_(uiEventStream) {
     QVBoxLayout* hlayout = new QVBoxLayout(this);
 
     QLabel* jidLabel = new QLabel("JID:", this);
@@ -44,21 +45,20 @@ QtAdHocCommandWithJIDWindow::QtAdHocCommandWithJIDWindow(UIEventStream* uiEventS
 
     setLayout(hlayout);
     show();
-}
+  }
 
-QtAdHocCommandWithJIDWindow::~QtAdHocCommandWithJIDWindow() {
-}
+  QtAdHocCommandWithJIDWindow::~QtAdHocCommandWithJIDWindow() {}
 
-void QtAdHocCommandWithJIDWindow::handleAcceptClick() {
+  void QtAdHocCommandWithJIDWindow::handleAcceptClick() {
     const JID jid = JID(Q2PSTRING(jid_->text()));
     const std::string node = Q2PSTRING(node_->text());
     std::shared_ptr<UIEvent> event(new RequestAdHocWithJIDUIEvent(jid, node));
     uiEventStream_->send(event);
     accept();
-}
+  }
 
-void QtAdHocCommandWithJIDWindow::handleRejectClick() {
+  void QtAdHocCommandWithJIDWindow::handleRejectClick() {
     reject();
-}
+  }
 
-}
+} // namespace Swift

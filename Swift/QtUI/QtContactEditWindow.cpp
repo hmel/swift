@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -23,10 +24,10 @@
 
 namespace Swift {
 
-QtContactEditWindow::QtContactEditWindow() : contactEditWidget_(nullptr) {
-    resize(400,300);
+  QtContactEditWindow::QtContactEditWindow() : contactEditWidget_(nullptr) {
+    resize(400, 300);
     setWindowTitle(tr("Edit contact"));
-    setContentsMargins(0,0,0,0);
+    setContentsMargins(0, 0, 0, 0);
 
     QBoxLayout* layout = new QVBoxLayout(this);
 
@@ -35,7 +36,7 @@ QtContactEditWindow::QtContactEditWindow() : contactEditWidget_(nullptr) {
     layout->addWidget(jidLabel_);
 
     groupsLayout_ = new QVBoxLayout();
-    groupsLayout_->setContentsMargins(0,0,0,0);
+    groupsLayout_->setContentsMargins(0, 0, 0, 0);
     layout->addLayout(groupsLayout_);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
@@ -44,22 +45,21 @@ QtContactEditWindow::QtContactEditWindow() : contactEditWidget_(nullptr) {
     connect(removeButton, SIGNAL(clicked()), this, SLOT(handleRemoveContact()));
     buttonLayout->addWidget(removeButton);
     QPushButton* okButton = new QPushButton(tr("OK"), this);
-    okButton->setDefault( true );
+    okButton->setDefault(true);
     connect(okButton, SIGNAL(clicked()), this, SLOT(handleUpdateContact()));
     buttonLayout->addStretch();
     buttonLayout->addWidget(okButton);
-}
+  }
 
-QtContactEditWindow::~QtContactEditWindow() {
-}
+  QtContactEditWindow::~QtContactEditWindow() {}
 
-void QtContactEditWindow::setNameSuggestions(const std::vector<std::string>& nameSuggestions) {
+  void QtContactEditWindow::setNameSuggestions(const std::vector<std::string>& nameSuggestions) {
     if (contactEditWidget_) {
-        contactEditWidget_->setNameSuggestions(nameSuggestions);
+      contactEditWidget_->setNameSuggestions(nameSuggestions);
     }
-}
+  }
 
-void QtContactEditWindow::setContact(const JID& jid, const std::string& name, const std::vector<std::string>& groups, const std::set<std::string>& allGroups) {
+  void QtContactEditWindow::setContact(const JID& jid, const std::string& name, const std::vector<std::string>& groups, const std::set<std::string>& allGroups) {
     delete contactEditWidget_;
     jid_ = jid;
     jidLabel_->setText("<b>" + P2QSTRING(jid.toString()) + "</b>");
@@ -68,29 +68,29 @@ void QtContactEditWindow::setContact(const JID& jid, const std::string& name, co
     groupsLayout_->addWidget(contactEditWidget_);
     contactEditWidget_->setName(name);
     contactEditWidget_->setSelectedGroups(groups);
-}
+  }
 
-void QtContactEditWindow::setEnabled(bool b) {
+  void QtContactEditWindow::setEnabled(bool b) {
     QWidget::setEnabled(b);
-}
+  }
 
-void QtContactEditWindow::show() {
+  void QtContactEditWindow::show() {
     QWidget::showNormal();
     QWidget::activateWindow();
     QWidget::raise();
-}
+  }
 
-void QtContactEditWindow::hide() {
+  void QtContactEditWindow::hide() {
     QWidget::hide();
-}
+  }
 
-void QtContactEditWindow::handleRemoveContact() {
+  void QtContactEditWindow::handleRemoveContact() {
     if (confirmContactDeletion(jid_)) {
-        onRemoveContactRequest();
+      onRemoveContactRequest();
     }
-}
+  }
 
-bool QtContactEditWindow::confirmContactDeletion(const JID& jid) {
+  bool QtContactEditWindow::confirmContactDeletion(const JID& jid) {
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("Confirm contact deletion"));
     msgBox.setText(tr("Are you sure you want to delete this contact?"));
@@ -98,10 +98,10 @@ bool QtContactEditWindow::confirmContactDeletion(const JID& jid) {
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     msgBox.setDefaultButton(QMessageBox::Yes);
     return msgBox.exec() == QMessageBox::Yes;
-}
+  }
 
-void QtContactEditWindow::handleUpdateContact() {
+  void QtContactEditWindow::handleUpdateContact() {
     onChangeContactRequest(contactEditWidget_->getName(), contactEditWidget_->getSelectedGroups());
-}
+  }
 
-}
+} // namespace Swift

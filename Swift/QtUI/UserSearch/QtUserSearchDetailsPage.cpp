@@ -7,6 +7,8 @@
 #include <Swift/QtUI/UserSearch/QtUserSearchDetailsPage.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
+
 #include <boost/signals2.hpp>
 
 #include <QLabel>
@@ -18,39 +20,37 @@
 
 namespace Swift {
 
-QtUserSearchDetailsPage::QtUserSearchDetailsPage(const std::set<std::string>& groups) {
+  QtUserSearchDetailsPage::QtUserSearchDetailsPage(const std::set<std::string>& groups) {
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(new QLabel(tr("Please choose a name for the contact, and select the groups you want to add the contact to.")));
     editWidget = new QtContactEditWidget(groups, this);
     layout->addWidget(editWidget);
-}
+  }
 
-QtUserSearchDetailsPage::~QtUserSearchDetailsPage() {
+  QtUserSearchDetailsPage::~QtUserSearchDetailsPage() {}
 
-}
-
-void QtUserSearchDetailsPage::setJID(const JID& jid) {
+  void QtUserSearchDetailsPage::setJID(const JID& jid) {
     contactJID = jid;
-}
+  }
 
-void QtUserSearchDetailsPage::setNameSuggestions(const std::vector<std::string>& nameSuggestions) {
+  void QtUserSearchDetailsPage::setNameSuggestions(const std::vector<std::string>& nameSuggestions) {
     editWidget->setNameSuggestions(nameSuggestions);
-}
+  }
 
-void QtUserSearchDetailsPage::setName(const std::string& name) {
+  void QtUserSearchDetailsPage::setName(const std::string& name) {
     editWidget->setName(name);
-}
+  }
 
-std::set<std::string> QtUserSearchDetailsPage::getSelectedGroups() {
+  std::set<std::string> QtUserSearchDetailsPage::getSelectedGroups() {
     return editWidget->getSelectedGroups();
-}
+  }
 
-std::string QtUserSearchDetailsPage::getName() {
+  std::string QtUserSearchDetailsPage::getName() {
     return editWidget->getName();
-}
+  }
 
-void QtUserSearchDetailsPage::clear() {
+  void QtUserSearchDetailsPage::clear() {
     editWidget->clear();
-}
+  }
 
-}
+} // namespace Swift

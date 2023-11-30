@@ -7,101 +7,86 @@
 #include <Swiften/Session/Session.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/StreamStack/StreamStack.h>
 #include <Swiften/StreamStack/XMPPLayer.h>
 
 namespace Swift {
 
-Session::Session(
-        std::shared_ptr<Connection> connection,
-        PayloadParserFactoryCollection* payloadParserFactories,
-        PayloadSerializerCollection* payloadSerializers,
-        XMLParserFactory* xmlParserFactory) :
-            connection(connection),
-            payloadParserFactories(payloadParserFactories),
-            payloadSerializers(payloadSerializers),
-            xmlParserFactory(xmlParserFactory),
-            finishing(false) {
-}
+  Session::Session(std::shared_ptr<Connection> connection, PayloadParserFactoryCollection* payloadParserFactories, PayloadSerializerCollection* payloadSerializers, XMLParserFactory* xmlParserFactory) : connection(connection), payloadParserFactories(payloadParserFactories), payloadSerializers(payloadSerializers), xmlParserFactory(xmlParserFactory), finishing(false) {}
 
-Session::~Session() {
-}
+  Session::~Session() {}
 
-void Session::startSession() {
+  void Session::startSession() {
     initializeStreamStack();
     handleSessionStarted();
-}
+  }
 
-void Session::finishSession() {
+  void Session::finishSession() {
     if (finishing) {
-        return;
+      return;
     }
     finishing = true;
     if (auto xmppLayer = getXMPPLayer()) {
-        xmppLayer->writeFooter();
+      xmppLayer->writeFooter();
     }
     connection->disconnect();
-}
+  }
 
-void Session::finishSession(const SessionError& /*error*/) {
+  void Session::finishSession(const SessionError& /*error*/) {
     if (finishing) {
-        return;
+      return;
     }
     finishing = true;
     if (auto xmppLayer = getXMPPLayer()) {
-        xmppLayer->writeFooter();
+      xmppLayer->writeFooter();
     }
     connection->disconnect();
-}
+  }
 
-void Session::initializeStreamStack() {
+  void Session::initializeStreamStack() {
     auto xmppLayer = std::unique_ptr<XMPPLayer>(new XMPPLayer(payloadParserFactories, payloadSerializers, xmlParserFactory, ClientStreamType));
-    xmppLayer->onStreamStart.connect(
-            boost::bind(&Session::handleStreamStart, this, _1));
+    xmppLayer->onStreamStart.connect(boost::bind(&Session::handleStreamStart, this, _1));
     xmppLayer->onElement.connect(boost::bind(&Session::handleElement, this, _1));
-    xmppLayer->onError.connect(
-            boost::bind(&Session::finishSession, this, XMLError));
+    xmppLayer->onError.connect(boost::bind(&Session::finishSession, this, XMLError));
     xmppLayer->onDataRead.connect(boost::bind(boost::ref(onDataRead), _1));
     xmppLayer->onWriteData.connect(boost::bind(boost::ref(onDataWritten), _1));
-    connection->onDisconnected.connect(
-            boost::bind(&Session::handleDisconnected, this, _1));
+    connection->onDisconnected.connect(boost::bind(&Session::handleDisconnected, this, _1));
     streamStack = std::unique_ptr<StreamStack>(new StreamStack(std::move(xmppLayer), std::unique_ptr<ConnectionLayer>(new ConnectionLayer(connection))));
-}
+  }
 
-XMPPLayer* Session::getXMPPLayer() const {
+  XMPPLayer* Session::getXMPPLayer() const {
     return dynamic_cast<XMPPLayer*>(streamStack->getTopLayer());
-}
+  }
 
-StreamStack* Session::getStreamStack() const {
+  StreamStack* Session::getStreamStack() const {
     return streamStack.get();
-}
+  }
 
-
-void Session::sendElement(std::shared_ptr<ToplevelElement> stanza) {
+  void Session::sendElement(std::shared_ptr<ToplevelElement> stanza) {
     getXMPPLayer()->writeElement(stanza);
-}
+  }
 
-void Session::handleDisconnected(const boost::optional<Connection::Error>& connectionError) {
-    connection->onDisconnected.disconnect(
-            boost::bind(&Session::handleDisconnected, this, _1));
+  void Session::handleDisconnected(const boost::optional<Connection::Error>& connectionError) {
+    connection->onDisconnected.disconnect(boost::bind(&Session::handleDisconnected, this, _1));
     if (connectionError) {
-        switch (*connectionError) {
-            case Connection::ReadError:
-                handleSessionFinished(ConnectionReadError);
-                onSessionFinished(ConnectionReadError);
-                break;
-            case Connection::WriteError:
-                handleSessionFinished(ConnectionWriteError);
-                onSessionFinished(ConnectionWriteError);
-                break;
-        }
+      switch (*connectionError) {
+        case Connection::ReadError:
+          handleSessionFinished(ConnectionReadError);
+          onSessionFinished(ConnectionReadError);
+          break;
+        case Connection::WriteError:
+          handleSessionFinished(ConnectionWriteError);
+          onSessionFinished(ConnectionWriteError);
+          break;
+      }
     }
     else {
-        boost::optional<SessionError> error;
-        handleSessionFinished(error);
-        onSessionFinished(error);
+      boost::optional<SessionError> error;
+      handleSessionFinished(error);
+      onSessionFinished(error);
     }
-}
+  }
 
-}
+} // namespace Swift

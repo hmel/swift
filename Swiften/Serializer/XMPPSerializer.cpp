@@ -10,6 +10,7 @@
 #include <memory>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Base/Log.h>
 #include <Swiften/Elements/ProtocolHeader.h>
@@ -39,7 +40,7 @@
 
 namespace Swift {
 
-XMPPSerializer::XMPPSerializer(PayloadSerializerCollection* payloadSerializers, StreamType type, bool setExplictNSonTopLevelElements) : type_(type) {
+  XMPPSerializer::XMPPSerializer(PayloadSerializerCollection* payloadSerializers, StreamType type, bool setExplictNSonTopLevelElements) : type_(type) {
     serializers_.push_back(std::make_shared<PresenceSerializer>(payloadSerializers, setExplictNSonTopLevelElements ? getDefaultNamespace() : boost::optional<std::string>()));
     serializers_.push_back(std::make_shared<IQSerializer>(payloadSerializers, setExplictNSonTopLevelElements ? getDefaultNamespace() : boost::optional<std::string>()));
     serializers_.push_back(std::make_shared<MessageSerializer>(payloadSerializers, setExplictNSonTopLevelElements ? getDefaultNamespace() : boost::optional<std::string>()));
@@ -63,49 +64,52 @@ XMPPSerializer::XMPPSerializer(PayloadSerializerCollection* payloadSerializers, 
     serializers_.push_back(std::make_shared<StanzaAckSerializer>());
     serializers_.push_back(std::make_shared<StanzaAckRequestSerializer>());
     serializers_.push_back(std::make_shared<ComponentHandshakeSerializer>());
-}
+  }
 
-std::string XMPPSerializer::serializeHeader(const ProtocolHeader& header) const {
+  std::string XMPPSerializer::serializeHeader(const ProtocolHeader& header) const {
     std::string result = "<?xml version=\"1.0\"?><stream:stream xmlns=\"" + getDefaultNamespace() + "\" xmlns:stream=\"http://etherx.jabber.org/streams\"";
     if (!header.getFrom().empty()) {
-        result += " from=\"" + header.getFrom() + "\"";
+      result += " from=\"" + header.getFrom() + "\"";
     }
     if (!header.getTo().empty()) {
-        result += " to=\"" + header.getTo() + "\"";
+      result += " to=\"" + header.getTo() + "\"";
     }
     if (!header.getID().empty()) {
-        result += " id=\"" + header.getID() + "\"";
+      result += " id=\"" + header.getID() + "\"";
     }
     if (!header.getVersion().empty()) {
-        result += " version=\"" + header.getVersion() + "\"";
+      result += " version=\"" + header.getVersion() + "\"";
     }
     result += ">";
     return result;
-}
+  }
 
-SafeByteArray XMPPSerializer::serializeElement(std::shared_ptr<ToplevelElement> element) const {
-    std::vector< std::shared_ptr<ElementSerializer> >::const_iterator i = std::find_if(serializers_.begin(), serializers_.end(), boost::bind(&ElementSerializer::canSerialize, _1, element));
+  SafeByteArray XMPPSerializer::serializeElement(std::shared_ptr<ToplevelElement> element) const {
+    std::vector<std::shared_ptr<ElementSerializer>>::const_iterator i = std::find_if(serializers_.begin(), serializers_.end(), boost::bind(&ElementSerializer::canSerialize, _1, element));
     if (i != serializers_.end()) {
-        return (*i)->serialize(element);
+      return (*i)->serialize(element);
     }
     else {
-        SWIFT_LOG(warning) << "Could not find serializer for " << typeid(*(element.get())).name();
-        return createSafeByteArray("");
+      SWIFT_LOG(warning) << "Could not find serializer for " << typeid(*(element.get())).name();
+      return createSafeByteArray("");
     }
-}
+  }
 
-std::string XMPPSerializer::serializeFooter() const {
+  std::string XMPPSerializer::serializeFooter() const {
     return "</stream:stream>";
-}
+  }
 
-std::string XMPPSerializer::getDefaultNamespace() const {
+  std::string XMPPSerializer::getDefaultNamespace() const {
     switch (type_) {
-        case ClientStreamType: return "jabber:client";
-        case ServerStreamType: return "jabber:server";
-        case ComponentStreamType: return "jabber:component:accept";
+      case ClientStreamType:
+        return "jabber:client";
+      case ServerStreamType:
+        return "jabber:server";
+      case ComponentStreamType:
+        return "jabber:component:accept";
     }
     assert(false);
     return "";
-}
+  }
 
-}
+} // namespace Swift

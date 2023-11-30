@@ -15,47 +15,43 @@
 #include <iostream>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 namespace Swift {
 
-SingleThreadedEventLoop::SingleThreadedEventLoop()
-: shouldShutDown_(false), eventAvailable_(false)
-{
-}
+  SingleThreadedEventLoop::SingleThreadedEventLoop() : shouldShutDown_(false), eventAvailable_(false) {}
 
-SingleThreadedEventLoop::~SingleThreadedEventLoop() {
+  SingleThreadedEventLoop::~SingleThreadedEventLoop() {}
 
-}
-
-void SingleThreadedEventLoop::waitForEvents() {
+  void SingleThreadedEventLoop::waitForEvents() {
     std::unique_lock<std::mutex> lock(eventAvailableMutex_);
     while (!eventAvailable_ && !shouldShutDown_) {
-        eventAvailableCondition_.wait(lock);
+      eventAvailableCondition_.wait(lock);
     }
 
     if (shouldShutDown_) {
-        throw EventLoopCanceledException();
+      throw EventLoopCanceledException();
     }
-}
+  }
 
-void SingleThreadedEventLoop::handleEvents() {
+  void SingleThreadedEventLoop::handleEvents() {
     {
-        std::lock_guard<std::mutex> lock(eventAvailableMutex_);
-        eventAvailable_ = false;
+      std::lock_guard<std::mutex> lock(eventAvailableMutex_);
+      eventAvailable_ = false;
     }
     handleNextEvent();
-}
+  }
 
-void SingleThreadedEventLoop::stop() {
+  void SingleThreadedEventLoop::stop() {
     std::unique_lock<std::mutex> lock(eventAvailableMutex_);
     shouldShutDown_ = true;
     eventAvailableCondition_.notify_one();
-}
+  }
 
-void SingleThreadedEventLoop::eventPosted() {
+  void SingleThreadedEventLoop::eventPosted() {
     std::lock_guard<std::mutex> lock(eventAvailableMutex_);
     eventAvailable_ = true;
     eventAvailableCondition_.notify_one();
-}
+  }
 
 } // namespace Swift

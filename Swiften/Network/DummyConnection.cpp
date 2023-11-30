@@ -10,23 +10,22 @@
 #include <memory>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 namespace Swift {
 
-DummyConnection::DummyConnection(EventLoop* eventLoop) : eventLoop(eventLoop) {
-}
+  DummyConnection::DummyConnection(EventLoop* eventLoop) : eventLoop(eventLoop) {}
 
-void DummyConnection::receive(const SafeByteArray& data) {
+  void DummyConnection::receive(const SafeByteArray& data) {
     eventLoop->postEvent(boost::bind(boost::ref(onDataRead), std::make_shared<SafeByteArray>(data)), shared_from_this());
-}
+  }
 
-void DummyConnection::listen() {
+  void DummyConnection::listen() {
     assert(false);
-}
+  }
 
-void DummyConnection::connect(const HostAddressPort&) {
+  void DummyConnection::connect(const HostAddressPort&) {
     assert(false);
-}
+  }
 
-
-}
+} // namespace Swift

@@ -13,6 +13,8 @@
 #include <Swift/QtUI/UserSearch/QtSuggestingJIDInput.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
+
 #include <boost/signals2.hpp>
 
 #include <QAbstractItemView>
@@ -30,7 +32,7 @@
 
 namespace Swift {
 
-QtSuggestingJIDInput::QtSuggestingJIDInput(QWidget* parent, SettingsProvider* settings) : QLineEdit(parent), settings_(settings) {
+  QtSuggestingJIDInput::QtSuggestingJIDInput(QWidget* parent, SettingsProvider* settings) : QLineEdit(parent), settings_(settings) {
     treeViewPopup_ = new QTreeView();
     treeViewPopup_->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
     //treeViewPopup_->setAttribute(Qt::WA_ShowWithoutActivating);
@@ -57,111 +59,117 @@ QtSuggestingJIDInput::QtSuggestingJIDInput(QWidget* parent, SettingsProvider* se
     treeViewPopup_->setItemDelegate(contactListDelegate_);
 
     settings_->onSettingChanged.connect(boost::bind(&QtSuggestingJIDInput::handleSettingsChanged, this, _1));
-}
+  }
 
-QtSuggestingJIDInput::~QtSuggestingJIDInput() {
+  QtSuggestingJIDInput::~QtSuggestingJIDInput() {
     settings_->onSettingChanged.disconnect(boost::bind(&QtSuggestingJIDInput::handleSettingsChanged, this, _1));
     delete treeViewPopup_;
     delete contactListDelegate_;
     delete contactListModel_;
-}
+  }
 
-Contact::ref QtSuggestingJIDInput::getContact() {
+  Contact::ref QtSuggestingJIDInput::getContact() {
     if (!!currentContact_) {
-        return currentContact_;
+      return currentContact_;
     }
 
     if (!text().isEmpty()) {
-        JID jid(Q2PSTRING(text()));
-        if (jid.isValid()) {
-            Contact::ref manualContact = std::make_shared<Contact>();
-            manualContact->name = jid.toString();
-            manualContact->jid = jid;
-            return manualContact;
-        }
+      JID jid(Q2PSTRING(text()));
+      if (jid.isValid()) {
+        Contact::ref manualContact = std::make_shared<Contact>();
+        manualContact->name = jid.toString();
+        manualContact->jid = jid;
+        return manualContact;
+      }
     }
     return std::shared_ptr<Contact>();
-}
+  }
 
-void QtSuggestingJIDInput::setSuggestions(const std::vector<Contact::ref>& suggestions) {
+  void QtSuggestingJIDInput::setSuggestions(const std::vector<Contact::ref>& suggestions) {
     contactListModel_->setList(suggestions);
     positionPopup();
     if (!suggestions.empty()) {
-        treeViewPopup_->setCurrentIndex(contactListModel_->index(0, 0));
-        showPopup();
-    } else {
-        currentContact_.reset();
-        hidePopup();
+      treeViewPopup_->setCurrentIndex(contactListModel_->index(0, 0));
+      showPopup();
     }
-}
+    else {
+      currentContact_.reset();
+      hidePopup();
+    }
+  }
 
-void QtSuggestingJIDInput::clear() {
+  void QtSuggestingJIDInput::clear() {
     setText("");
     currentContact_.reset();
-}
+  }
 
-void QtSuggestingJIDInput::keyPressEvent(QKeyEvent* event) {
+  void QtSuggestingJIDInput::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Up) {
-        if (contactListModel_->rowCount() > 0) {
-            int row = treeViewPopup_->currentIndex().row();
-            row = (row + contactListModel_->rowCount() - 1) % contactListModel_->rowCount();
-            treeViewPopup_->setCurrentIndex(contactListModel_->index(row, 0));
-        }
-    } else if (event->key() == Qt::Key_Down) {
-        if (contactListModel_->rowCount() > 0) {
-            int row = treeViewPopup_->currentIndex().row();
-            row = (row + contactListModel_->rowCount() + 1) % contactListModel_->rowCount();
-            treeViewPopup_->setCurrentIndex(contactListModel_->index(row, 0));
-        }
-    } else if (event->key() == Qt::Key_Return && treeViewPopup_->isVisible()) {
-        QModelIndex index = treeViewPopup_->currentIndex();
-        if (!contactListModel_->getList().empty() && index.isValid()) {
-            currentContact_ = contactListModel_->getContact(index.row());
-            if (currentContact_->jid.isValid()) {
-                setText(P2QSTRING(currentContact_->jid.toString()));
-            } else {
-                setText(P2QSTRING(currentContact_->name));
-            }
-            hidePopup();
-            clearFocus();
-        } else {
-            currentContact_.reset();
-        }
-        editingDone();
-    } else {
-        QLineEdit::keyPressEvent(event);
+      if (contactListModel_->rowCount() > 0) {
+        int row = treeViewPopup_->currentIndex().row();
+        row = (row + contactListModel_->rowCount() - 1) % contactListModel_->rowCount();
+        treeViewPopup_->setCurrentIndex(contactListModel_->index(row, 0));
+      }
     }
-}
+    else if (event->key() == Qt::Key_Down) {
+      if (contactListModel_->rowCount() > 0) {
+        int row = treeViewPopup_->currentIndex().row();
+        row = (row + contactListModel_->rowCount() + 1) % contactListModel_->rowCount();
+        treeViewPopup_->setCurrentIndex(contactListModel_->index(row, 0));
+      }
+    }
+    else if (event->key() == Qt::Key_Return && treeViewPopup_->isVisible()) {
+      QModelIndex index = treeViewPopup_->currentIndex();
+      if (!contactListModel_->getList().empty() && index.isValid()) {
+        currentContact_ = contactListModel_->getContact(index.row());
+        if (currentContact_->jid.isValid()) {
+          setText(P2QSTRING(currentContact_->jid.toString()));
+        }
+        else {
+          setText(P2QSTRING(currentContact_->name));
+        }
+        hidePopup();
+        clearFocus();
+      }
+      else {
+        currentContact_.reset();
+      }
+      editingDone();
+    }
+    else {
+      QLineEdit::keyPressEvent(event);
+    }
+  }
 
-void QtSuggestingJIDInput::hideEvent(QHideEvent* /* event */) {
+  void QtSuggestingJIDInput::hideEvent(QHideEvent* /* event */) {
     // Hide our popup when we are hidden (can happen when a dialog is closed by the user).
     treeViewPopup_->hide();
-}
+  }
 
-void QtSuggestingJIDInput::handleApplicationFocusChanged(QWidget* /*old*/, QWidget* /*now*/) {
+  void QtSuggestingJIDInput::handleApplicationFocusChanged(QWidget* /*old*/, QWidget* /*now*/) {
     /* Using the now argument gives use the wrong widget. This is part of the code needed
        to prevent stealing of focus when opening a the suggestion window. */
     QWidget* now = qApp->focusWidget();
     if (!now || (now != treeViewPopup_ && now != this && !now->isAncestorOf(this) && !now->isAncestorOf(treeViewPopup_) && !this->isAncestorOf(now) && !treeViewPopup_->isAncestorOf(now))) {
-        hidePopup();
+      hidePopup();
     }
-}
+  }
 
-void QtSuggestingJIDInput::handleSettingsChanged(const std::string& setting) {
+  void QtSuggestingJIDInput::handleSettingsChanged(const std::string& setting) {
     if (setting == QtUISettingConstants::COMPACT_ROSTER.getKey()) {
-        contactListDelegate_->setCompact(settings_->getSetting(QtUISettingConstants::COMPACT_ROSTER));
+      contactListDelegate_->setCompact(settings_->getSetting(QtUISettingConstants::COMPACT_ROSTER));
     }
-}
+  }
 
-void QtSuggestingJIDInput::handleClicked(const QModelIndex& index) {
+  void QtSuggestingJIDInput::handleClicked(const QModelIndex& index) {
     if (index.isValid()) {
-        currentContact_ = contactListModel_->getContact(index.row());
-        onUserSelected(currentContact_);
-        hidePopup();
+      currentContact_ = contactListModel_->getContact(index.row());
+      onUserSelected(currentContact_);
+      hidePopup();
     }
-}
+  }
 
-void QtSuggestingJIDInput::positionPopup() {
+  void QtSuggestingJIDInput::positionPopup() {
     QDesktopWidget* desktop = QApplication::desktop();
     int screen = desktop->screenNumber(this);
     QPoint point = mapToGlobal(QPoint(0, height()));
@@ -173,7 +181,7 @@ void QtSuggestingJIDInput::positionPopup() {
 
     int screenWidth = geometry.x() + geometry.width();
     if (x + width > screenWidth) {
-        x = screenWidth - width;
+      x = screenWidth - width;
     }
 
     height = treeViewPopup_->sizeHintForRow(0) * contactListModel_->rowCount();
@@ -190,16 +198,16 @@ void QtSuggestingJIDInput::positionPopup() {
     treeViewPopup_->setGeometry(x, y, width, height);
     treeViewPopup_->move(x, y);
     treeViewPopup_->setMaximumWidth(width);
-}
+  }
 
-void QtSuggestingJIDInput::showPopup() {
+  void QtSuggestingJIDInput::showPopup() {
     treeViewPopup_->show();
     activateWindow();
     connect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)), this, SLOT(handleApplicationFocusChanged(QWidget*, QWidget*)), Qt::QueuedConnection);
     setFocus();
-}
+  }
 
-void QtSuggestingJIDInput::hidePopup() {
+  void QtSuggestingJIDInput::hidePopup() {
     disconnect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)), this, SLOT(handleApplicationFocusChanged(QWidget*, QWidget*)));
     treeViewPopup_->hide();
 
@@ -210,6 +218,6 @@ void QtSuggestingJIDInput::hidePopup() {
     // the popup is hidden. Ubuntu 16.04 and Windows 8 do not have this issue.
     window()->raise();
 #endif
-}
+  }
 
-}
+} // namespace Swift

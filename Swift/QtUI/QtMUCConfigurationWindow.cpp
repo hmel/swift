@@ -7,6 +7,7 @@
 #include <Swift/QtUI/QtMUCConfigurationWindow.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <QBoxLayout>
 #include <QCloseEvent>
@@ -14,12 +15,12 @@
 #include <Swift/QtUI/QtFormWidget.h>
 
 namespace Swift {
-QtMUCConfigurationWindow::QtMUCConfigurationWindow(Form::ref form) : closed_(false) {
+  QtMUCConfigurationWindow::QtMUCConfigurationWindow(Form::ref form) : closed_(false) {
 
     setAttribute(Qt::WA_DeleteOnClose);
 
     QBoxLayout* layout = new QBoxLayout(QBoxLayout::TopToBottom, this);
-    layout->setContentsMargins(0,0,0,0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(2);
     //QLabel* label = new QLabel(this);
     //label->setText(tr("Room configuration"));
@@ -40,27 +41,24 @@ QtMUCConfigurationWindow::QtMUCConfigurationWindow(Form::ref form) : closed_(fal
     buttonsLayout->addWidget(okButton_);
     connect(okButton_, SIGNAL(clicked()), this, SLOT(handleOKClicked()));
     show();
-}
+  }
 
-QtMUCConfigurationWindow::~QtMUCConfigurationWindow() {
+  QtMUCConfigurationWindow::~QtMUCConfigurationWindow() {}
 
-}
-
-void QtMUCConfigurationWindow::closeEvent(QCloseEvent* /*event*/) {
+  void QtMUCConfigurationWindow::closeEvent(QCloseEvent* /*event*/) {
     if (!closed_) {
-        onFormCancelled();
+      onFormCancelled();
     }
-}
+  }
 
-void QtMUCConfigurationWindow::handleCancelClicked() {
+  void QtMUCConfigurationWindow::handleCancelClicked() {
     close();
-}
+  }
 
-void QtMUCConfigurationWindow::handleOKClicked() {
+  void QtMUCConfigurationWindow::handleOKClicked() {
     onFormComplete(formWidget_->getCompletedForm());
     closed_ = true;
     close();
-}
+  }
 
-
-}
+} // namespace Swift

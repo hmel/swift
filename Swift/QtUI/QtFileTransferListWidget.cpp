@@ -13,6 +13,7 @@
 #include <Swift/QtUI/QtFileTransferListWidget.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -25,10 +26,10 @@
 
 namespace Swift {
 
-QtFileTransferListWidget::QtFileTransferListWidget() : fileTransferOverview(nullptr) {
+  QtFileTransferListWidget::QtFileTransferListWidget() : fileTransferOverview(nullptr) {
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setSpacing(0);
-    layout->setContentsMargins(0,0,0,0);
+    layout->setContentsMargins(0, 0, 0, 0);
 
     treeView = new QTreeView(this);
     treeView->setRootIsDecorated(false);
@@ -43,7 +44,7 @@ QtFileTransferListWidget::QtFileTransferListWidget() : fileTransferOverview(null
     bottom->setAutoFillBackground(true);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout(bottom);
-    buttonLayout->setContentsMargins(10,0,20,0);
+    buttonLayout->setContentsMargins(10, 0, 20, 0);
     buttonLayout->setSpacing(0);
 
     clearFinished = new QPushButton(tr("Clear all"), bottom);
@@ -53,59 +54,59 @@ QtFileTransferListWidget::QtFileTransferListWidget() : fileTransferOverview(null
 
     setWindowTitle(tr("File Transfer List"));
     emit titleUpdated();
-}
+  }
 
-QtFileTransferListWidget::~QtFileTransferListWidget() {
+  QtFileTransferListWidget::~QtFileTransferListWidget() {
     if (fileTransferOverview) {
-        fileTransferOverview->onFileTransferListChanged.disconnect(boost::bind(&QtFileTransferListWidget::handleFileTransferListChanged, this));
-        fileTransferOverview = nullptr;
+      fileTransferOverview->onFileTransferListChanged.disconnect(boost::bind(&QtFileTransferListWidget::handleFileTransferListChanged, this));
+      fileTransferOverview = nullptr;
     }
     delete itemModel;
-}
+  }
 
-void QtFileTransferListWidget::showEvent(QShowEvent* event) {
+  void QtFileTransferListWidget::showEvent(QShowEvent* event) {
     emit windowOpening();
     emit titleUpdated(); /* This just needs to be somewhere after construction */
     QWidget::showEvent(event);
-}
+  }
 
-void QtFileTransferListWidget::handleFileTransferListChanged() {
+  void QtFileTransferListWidget::handleFileTransferListChanged() {
     clearFinished->setEnabled(fileTransferOverview->isClearable());
-}
+  }
 
-void QtFileTransferListWidget::clearInactiveTransfers() {
+  void QtFileTransferListWidget::clearInactiveTransfers() {
     fileTransferOverview->clearFinished();
-}
+  }
 
-void QtFileTransferListWidget::show() {
+  void QtFileTransferListWidget::show() {
     QWidget::show();
     emit windowOpening();
-}
+  }
 
-void QtFileTransferListWidget::activate() {
+  void QtFileTransferListWidget::activate() {
     emit wantsToActivate();
-}
+  }
 
-void QtFileTransferListWidget::setFileTransferOverview(FileTransferOverview *overview) {
+  void QtFileTransferListWidget::setFileTransferOverview(FileTransferOverview* overview) {
     if (fileTransferOverview) {
-        fileTransferOverview->onFileTransferListChanged.disconnect(boost::bind(&QtFileTransferListWidget::handleFileTransferListChanged, this));
-        fileTransferOverview = nullptr;
+      fileTransferOverview->onFileTransferListChanged.disconnect(boost::bind(&QtFileTransferListWidget::handleFileTransferListChanged, this));
+      fileTransferOverview = nullptr;
     }
     if (overview) {
-        fileTransferOverview = overview;
-        fileTransferOverview->onFileTransferListChanged.connect(boost::bind(&QtFileTransferListWidget::handleFileTransferListChanged, this));
-        clearFinished->setEnabled(fileTransferOverview->isClearable());
+      fileTransferOverview = overview;
+      fileTransferOverview->onFileTransferListChanged.connect(boost::bind(&QtFileTransferListWidget::handleFileTransferListChanged, this));
+      clearFinished->setEnabled(fileTransferOverview->isClearable());
     }
     itemModel->setFileTransferOverview(overview);
-}
+  }
 
-std::string QtFileTransferListWidget::getID() const {
+  std::string QtFileTransferListWidget::getID() const {
     return "QtFileTransferListWidget";
-}
+  }
 
-void QtFileTransferListWidget::closeEvent(QCloseEvent* event) {
+  void QtFileTransferListWidget::closeEvent(QCloseEvent* event) {
     emit windowClosing();
     event->accept();
-}
+  }
 
-}
+} // namespace Swift

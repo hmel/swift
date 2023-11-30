@@ -9,6 +9,8 @@
 #include <memory>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
+
 #include <boost/optional.hpp>
 
 #include <QAction>
@@ -55,12 +57,12 @@
 
 namespace Swift {
 
-QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, UIEventStream* uiEventStream, QtLoginWindow::QtMenus loginMenus, StatusCache* statusCache, bool emoticonsExist, bool enableAdHocCommandOnJID) : QWidget(), MainWindow(false), chattables_(chattables), loginMenus_(loginMenus) {
+  QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, UIEventStream* uiEventStream, QtLoginWindow::QtMenus loginMenus, StatusCache* statusCache, bool emoticonsExist, bool enableAdHocCommandOnJID) : QWidget(), MainWindow(false), chattables_(chattables), loginMenus_(loginMenus) {
     uiEventStream_ = uiEventStream;
     settings_ = settings;
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
-    QBoxLayout *mainLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
-    mainLayout->setContentsMargins(0,0,0,0);
+    QBoxLayout* mainLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
     meView_ = new QtRosterHeader(settings, statusCache, this);
     mainLayout->addWidget(meView_);
@@ -74,20 +76,20 @@ QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, U
     mainLayout->addWidget(tabs_);
 
     if (settings->getSetting(SettingConstants::FUTURE)) {
-        chatOverview_ = new QtChatOverview(chattables, this);
-        auto overviewScroll = new QScrollArea(this);
-        overviewScroll->setWidgetResizable(true);
-        overviewScroll->setWidget(chatOverview_);
-        tabs_->addTab(overviewScroll, tr("&All"));
+      chatOverview_ = new QtChatOverview(chattables, this);
+      auto overviewScroll = new QScrollArea(this);
+      overviewScroll->setWidgetResizable(true);
+      overviewScroll->setWidget(chatOverview_);
+      tabs_->addTab(overviewScroll, tr("&All"));
 
-        // When used with QSplitter and setChildrenCollapsible(false), the following prevents
-        // this widget to be hidden, i.e. resized to zero width.
-        chatOverview_->setMinimumWidth(20);
+      // When used with QSplitter and setChildrenCollapsible(false), the following prevents
+      // this widget to be hidden, i.e. resized to zero width.
+      chatOverview_->setMinimumWidth(20);
     }
 
     contactsTabWidget_ = new QWidget(this);
     contactsTabWidget_->setContentsMargins(0, 0, 0, 0);
-    QBoxLayout *contactTabLayout = new QBoxLayout(QBoxLayout::TopToBottom, contactsTabWidget_);
+    QBoxLayout* contactTabLayout = new QBoxLayout(QBoxLayout::TopToBottom, contactsTabWidget_);
     contactsTabWidget_->setLayout(contactTabLayout);
     contactTabLayout->setSpacing(0);
     contactTabLayout->setContentsMargins(0, 0, 0, 0);
@@ -112,20 +114,19 @@ QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, U
 
     tabBarCombo_ = nullptr;
     if (settings_->getSetting(QtUISettingConstants::USE_SCREENREADER)) {
-        tabs_->tabBar()->hide();
-        tabBarCombo_ = new QComboBox(this);
-        tabBarCombo_->setAccessibleName("Current View");
-        tabBarCombo_->addItem(tr("All"));
+      tabs_->tabBar()->hide();
+      tabBarCombo_ = new QComboBox(this);
+      tabBarCombo_->setAccessibleName("Current View");
+      tabBarCombo_->addItem(tr("All"));
 #ifndef NOT_YET
-        tabBarCombo_->addItem(tr("Contacts"));
-        tabBarCombo_->addItem(tr("Chats"));
+      tabBarCombo_->addItem(tr("Contacts"));
+      tabBarCombo_->addItem(tr("Chats"));
 #endif
-        tabBarCombo_->addItem(tr("Notices"));
-        tabBarCombo_->setCurrentIndex(tabs_->currentIndex());
-        mainLayout->addWidget(tabBarCombo_);
-        connect(tabBarCombo_, SIGNAL(currentIndexChanged(int)), tabs_, SLOT(setCurrentIndex(int)));
+      tabBarCombo_->addItem(tr("Notices"));
+      tabBarCombo_->setCurrentIndex(tabs_->currentIndex());
+      mainLayout->addWidget(tabBarCombo_);
+      connect(tabBarCombo_, SIGNAL(currentIndexChanged(int)), tabs_, SLOT(setCurrentIndex(int)));
     }
-
 
     this->setLayout(mainLayout);
 
@@ -147,12 +148,12 @@ QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, U
     handleShowOfflineToggled(settings_->getSetting(SettingConstants::SHOW_OFFLINE));
 
     if (emoticonsExist) {
-        showEmoticonsAction_ = new QAction(tr("&Show Emoticons"), this);
-        showEmoticonsAction_->setCheckable(true);
-        showEmoticonsAction_->setChecked(false);
-        connect(showEmoticonsAction_, SIGNAL(toggled(bool)), SLOT(handleShowEmoticonsToggled(bool)));
-        viewMenu->addAction(showEmoticonsAction_);
-        handleShowEmoticonsToggled(settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS));
+      showEmoticonsAction_ = new QAction(tr("&Show Emoticons"), this);
+      showEmoticonsAction_->setCheckable(true);
+      showEmoticonsAction_->setChecked(false);
+      connect(showEmoticonsAction_, SIGNAL(toggled(bool)), SLOT(handleShowEmoticonsToggled(bool)));
+      viewMenu->addAction(showEmoticonsAction_);
+      handleShowEmoticonsToggled(settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS));
     }
 
     QMenu* actionsMenu = new QMenu(tr("&Actions"), this);
@@ -193,19 +194,19 @@ QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, U
     actionsMenu->addAction(chatUserAction_);
     onlineOnlyActions_ << chatUserAction_;
     if (enableAdHocCommandOnJID) {
-        otherAdHocAction_ = new QAction(tr("Run Other Command"), this);
-        connect(otherAdHocAction_, SIGNAL(triggered()), this, SLOT(handleOtherAdHocActionTriggered()));
-        actionsMenu->addAction(otherAdHocAction_);
-        onlineOnlyActions_ << otherAdHocAction_;
+      otherAdHocAction_ = new QAction(tr("Run Other Command"), this);
+      connect(otherAdHocAction_, SIGNAL(triggered()), this, SLOT(handleOtherAdHocActionTriggered()));
+      actionsMenu->addAction(otherAdHocAction_);
+      onlineOnlyActions_ << otherAdHocAction_;
     }
     serverAdHocMenu_ = new QMenu(tr("Run Server Command"), this);
     actionsMenu->addMenu(serverAdHocMenu_);
     if (settings_->getSetting(SettingConstants::FUTURE)) {
-        actionsMenu->addSeparator();
-        submitFormAction_ = new QAction(tr("Submit Form"), this);
-        connect(submitFormAction_, &QAction::triggered, this, &QtMainWindow::handleSubmitFormActionTriggered);
-        actionsMenu->addAction(submitFormAction_);
-        onlineOnlyActions_ << submitFormAction_;
+      actionsMenu->addSeparator();
+      submitFormAction_ = new QAction(tr("Submit Form"), this);
+      connect(submitFormAction_, &QAction::triggered, this, &QtMainWindow::handleSubmitFormActionTriggered);
+      actionsMenu->addAction(submitFormAction_);
+      onlineOnlyActions_ << submitFormAction_;
     }
     actionsMenu->addSeparator();
     QAction* signOutAction = new QAction(tr("&Sign Out"), this);
@@ -217,8 +218,8 @@ QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, U
     toggleRequestDeliveryReceipts_->setChecked(settings_->getSetting(SettingConstants::REQUEST_DELIVERYRECEIPTS));
     connect(toggleRequestDeliveryReceipts_, SIGNAL(toggled(bool)), SLOT(handleToggleRequestDeliveryReceipts(bool)));
 
-    QList< QAction* > generalMenuActions = loginMenus_.generalMenu->actions();
-    loginMenus_.generalMenu->insertAction(generalMenuActions.at(generalMenuActions.count()-2),toggleRequestDeliveryReceipts_);
+    QList<QAction*> generalMenuActions = loginMenus_.generalMenu->actions();
+    loginMenus_.generalMenu->insertAction(generalMenuActions.at(generalMenuActions.count() - 2), toggleRequestDeliveryReceipts_);
 
     treeWidget_->onSomethingSelectedChanged.connect(boost::bind(&QtMainWindow::handleSomethingSelectedChanged, this, _1));
 
@@ -229,180 +230,180 @@ QtMainWindow::QtMainWindow(Chattables& chattables, SettingsProvider* settings, U
     serverAdHocCommandActions_.append(adHocAction);
 
     settings_->onSettingChanged.connect(boost::bind(&QtMainWindow::handleSettingChanged, this, _1));
-}
+  }
 
-QtMainWindow::~QtMainWindow() {
+  QtMainWindow::~QtMainWindow() {
     settings_->onSettingChanged.disconnect(boost::bind(&QtMainWindow::handleSettingChanged, this, _1));
-}
+  }
 
-void QtMainWindow::handleTabChanged(int index) {
+  void QtMainWindow::handleTabChanged(int index) {
     settings_->storeSetting(QtUISettingConstants::CURRENT_ROSTER_TAB, index);
-}
+  }
 
-void QtMainWindow::handleToggleRequestDeliveryReceipts(bool enabled) {
+  void QtMainWindow::handleToggleRequestDeliveryReceipts(bool enabled) {
     settings_->storeSetting(SettingConstants::REQUEST_DELIVERYRECEIPTS, enabled);
-}
+  }
 
-void QtMainWindow::handleShowCertificateInfo() {
+  void QtMainWindow::handleShowCertificateInfo() {
     onShowCertificateRequest();
-}
+  }
 
-void QtMainWindow::handleEditBlockingList() {
+  void QtMainWindow::handleEditBlockingList() {
     uiEventStream_->send(std::make_shared<RequestBlockListDialogUIEvent>());
-}
+  }
 
-void QtMainWindow::handleSomethingSelectedChanged(bool itemSelected) {
+  void QtMainWindow::handleSomethingSelectedChanged(bool itemSelected) {
     bool isOnline = addUserAction_->isEnabled();
     editUserAction_->setEnabled(isOnline && itemSelected);
-}
+  }
 
-QtEventWindow* QtMainWindow::getEventWindow() {
+  QtEventWindow* QtMainWindow::getEventWindow() {
     return eventWindow_;
-}
+  }
 
-QtChatListWindow* QtMainWindow::getChatListWindow() {
+  QtChatListWindow* QtMainWindow::getChatListWindow() {
     return chatListWindow_;
-}
+  }
 
-void QtMainWindow::setRosterModel(Roster* roster) {
+  void QtMainWindow::setRosterModel(Roster* roster) {
     treeWidget_->setRosterModel(roster);
-}
+  }
 
-void QtMainWindow::handleEditProfileRequest() {
+  void QtMainWindow::handleEditProfileRequest() {
     uiEventStream_->send(std::make_shared<RequestProfileEditorUIEvent>());
-}
+  }
 
-void QtMainWindow::handleEventCountUpdated(int count) {
+  void QtMainWindow::handleEventCountUpdated(int count) {
     QColor eventTabColor = (count == 0) ? QColor() : QColor(255, 0, 0); // invalid resets to default
     int eventIndex = 2;
     tabs_->tabBar()->setTabTextColor(eventIndex, eventTabColor);
     QString text = tr("&Notices");
     if (count > 0) {
-        text += QString(" (%1)").arg(count);
+      text += QString(" (%1)").arg(count);
     }
     tabs_->setTabText(eventIndex, text);
-}
+  }
 
-void QtMainWindow::handleChatCountUpdated(int count) {
+  void QtMainWindow::handleChatCountUpdated(int count) {
     QColor chatTabColor = (count == 0) ? QColor() : QColor(255, 0, 0); // invalid resets to default
     int chatIndex = 1;
     tabs_->tabBar()->setTabTextColor(chatIndex, chatTabColor);
     QString text = tr("C&hats");
     if (count > 0) {
-        text += QString(" (%1)").arg(count);
+      text += QString(" (%1)").arg(count);
     }
     tabs_->setTabText(chatIndex, text);
-}
+  }
 
-void QtMainWindow::handleAddUserActionTriggered(bool /*checked*/) {
+  void QtMainWindow::handleAddUserActionTriggered(bool /*checked*/) {
     std::shared_ptr<UIEvent> event(new RequestAddUserDialogUIEvent());
     uiEventStream_->send(event);
-}
+  }
 
-void QtMainWindow::handleChatUserActionTriggered(bool /*checked*/) {
+  void QtMainWindow::handleChatUserActionTriggered(bool /*checked*/) {
     std::shared_ptr<UIEvent> event(new RequestChatWithUserDialogUIEvent());
     uiEventStream_->send(event);
-}
+  }
 
-void QtMainWindow::handleOtherAdHocActionTriggered() {
+  void QtMainWindow::handleOtherAdHocActionTriggered() {
     new QtAdHocCommandWithJIDWindow(uiEventStream_);
-}
+  }
 
-void QtMainWindow::handleSignOutAction() {
+  void QtMainWindow::handleSignOutAction() {
     loginMenus_.generalMenu->removeAction(toggleRequestDeliveryReceipts_);
     onSignOutRequest();
-}
+  }
 
-void QtMainWindow::handleEditProfileAction() {
+  void QtMainWindow::handleEditProfileAction() {
     uiEventStream_->send(std::make_shared<RequestProfileEditorUIEvent>());
-}
+  }
 
-void QtMainWindow::handleJoinMUCAction() {
+  void QtMainWindow::handleJoinMUCAction() {
     uiEventStream_->send(std::make_shared<RequestJoinMUCUIEvent>());
-}
+  }
 
-void QtMainWindow::handleViewLogsAction() {
+  void QtMainWindow::handleViewLogsAction() {
     uiEventStream_->send(std::make_shared<RequestHistoryUIEvent>());
-}
+  }
 
-void QtMainWindow::handleStatusChanged(StatusShow::Type showType, const QString &statusMessage) {
+  void QtMainWindow::handleStatusChanged(StatusShow::Type showType, const QString& statusMessage) {
     onChangeStatusRequest(showType, Q2PSTRING(statusMessage));
-}
+  }
 
-void QtMainWindow::handleSettingChanged(const std::string& settingPath) {
+  void QtMainWindow::handleSettingChanged(const std::string& settingPath) {
     if (settingPath == SettingConstants::SHOW_OFFLINE.getKey()) {
-        handleShowOfflineToggled(settings_->getSetting(SettingConstants::SHOW_OFFLINE));
+      handleShowOfflineToggled(settings_->getSetting(SettingConstants::SHOW_OFFLINE));
     }
     if (settingPath == QtUISettingConstants::SHOW_EMOTICONS.getKey()) {
-        handleShowEmoticonsToggled(settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS));
+      handleShowEmoticonsToggled(settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS));
     }
     if (settingPath == SettingConstants::REQUEST_DELIVERYRECEIPTS.getKey()) {
-        toggleRequestDeliveryReceipts_->setChecked(settings_->getSetting(SettingConstants::REQUEST_DELIVERYRECEIPTS));
+      toggleRequestDeliveryReceipts_->setChecked(settings_->getSetting(SettingConstants::REQUEST_DELIVERYRECEIPTS));
     }
     if (settingPath == QtUISettingConstants::COMPACT_ROSTER.getKey()) {
-        handleCompactRosterToggled(settings_->getSetting(QtUISettingConstants::COMPACT_ROSTER));
+      handleCompactRosterToggled(settings_->getSetting(QtUISettingConstants::COMPACT_ROSTER));
     }
-}
+  }
 
-void QtMainWindow::handleCompactRosterToggled(bool state) {
+  void QtMainWindow::handleCompactRosterToggled(bool state) {
     settings_->storeSetting(QtUISettingConstants::COMPACT_ROSTER, state);
     compactRosterAction_->setChecked(settings_->getSetting(QtUISettingConstants::COMPACT_ROSTER));
-}
+  }
 
-void QtMainWindow::handleShowOfflineToggled(bool state) {
+  void QtMainWindow::handleShowOfflineToggled(bool state) {
     settings_->storeSetting(SettingConstants::SHOW_OFFLINE, state);
     showOfflineAction_->setChecked(settings_->getSetting(SettingConstants::SHOW_OFFLINE));
-}
+  }
 
-void QtMainWindow::handleShowEmoticonsToggled(bool state) {
+  void QtMainWindow::handleShowEmoticonsToggled(bool state) {
     settings_->storeSetting(QtUISettingConstants::SHOW_EMOTICONS, state);
     showEmoticonsAction_->setChecked(settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS));
-}
+  }
 
-void QtMainWindow::setMyNick(const std::string& nick) {
+  void QtMainWindow::setMyNick(const std::string& nick) {
     meView_->setNick(P2QSTRING(nick));
-}
+  }
 
-void QtMainWindow::setMyJID(const JID& jid) {
+  void QtMainWindow::setMyJID(const JID& jid) {
     meView_->setJID(P2QSTRING(jid.toBare().toString()));
-}
+  }
 
-void QtMainWindow::setMyAvatarPath(const std::string& path) {
+  void QtMainWindow::setMyAvatarPath(const std::string& path) {
     meView_->setAvatar(P2QSTRING(path));
-}
+  }
 
-void QtMainWindow::setMyStatusText(const std::string& status) {
+  void QtMainWindow::setMyStatusText(const std::string& status) {
     meView_->setStatusText(P2QSTRING(status));
-}
+  }
 
-void QtMainWindow::setMyStatusType(StatusShow::Type type) {
+  void QtMainWindow::setMyStatusType(StatusShow::Type type) {
     meView_->setStatusType(type);
     const bool online = (type != StatusShow::None);
     treeWidget_->setOnline(online);
     chatListWindow_->setOnline(online);
     for (auto action : onlineOnlyActions_) {
-        action->setEnabled(online);
+      action->setEnabled(online);
     }
     serverAdHocMenu_->setEnabled(online);
-}
+  }
 
-void QtMainWindow::setMyContactRosterItem(std::shared_ptr<ContactRosterItem> contact) {
+  void QtMainWindow::setMyContactRosterItem(std::shared_ptr<ContactRosterItem> contact) {
     meView_->setContactRosterItem(contact);
-}
+  }
 
-void QtMainWindow::setConnecting() {
+  void QtMainWindow::setConnecting() {
     meView_->setConnecting();
-}
+  }
 
-void QtMainWindow::setStreamEncryptionStatus(bool tlsInPlaceAndValid) {
+  void QtMainWindow::setStreamEncryptionStatus(bool tlsInPlaceAndValid) {
     meView_->setStreamEncryptionStatus(tlsInPlaceAndValid);
-}
+  }
 
-void QtMainWindow::openCertificateDialog(const std::vector<Certificate::ref>& chain) {
+  void QtMainWindow::openCertificateDialog(const std::vector<Certificate::ref>& chain) {
     openCertificateDialog(chain, this);
-}
+  }
 
-void QtMainWindow::openCertificateDialog(const std::vector<Certificate::ref>& chain, QWidget* parent) {
+  void QtMainWindow::openCertificateDialog(const std::vector<Certificate::ref>& chain, QWidget* parent) {
 #if defined(SWIFTEN_PLATFORM_MACOSX)
     CocoaUIHelpers::displayCertificateChainAsSheet(parent, chain);
 #elif defined(SWIFTEN_PLATFORM_WINDOWS)
@@ -410,43 +411,43 @@ void QtMainWindow::openCertificateDialog(const std::vector<Certificate::ref>& ch
 #else
     QtCertificateViewerDialog::displayCertificateChainAsSheet(parent, chain);
 #endif
-}
+  }
 
-void QtMainWindow::handleAdHocActionTriggered(bool /*checked*/) {
+  void QtMainWindow::handleAdHocActionTriggered(bool /*checked*/) {
     QAction* action = qobject_cast<QAction*>(sender());
     assert(action);
     assert(serverAdHocCommandActions_.indexOf(action) >= 0);
     DiscoItems::Item command = serverAdHocCommands_[serverAdHocCommandActions_.indexOf(action)];
     uiEventStream_->send(std::make_shared<RequestAdHocUIEvent>(command));
-}
+  }
 
-void QtMainWindow::setAvailableAdHocCommands(const std::vector<DiscoItems::Item>& commands) {
+  void QtMainWindow::setAvailableAdHocCommands(const std::vector<DiscoItems::Item>& commands) {
     serverAdHocCommands_ = commands;
     for (auto action : serverAdHocCommandActions_) {
-        delete action;
+      delete action;
     }
     serverAdHocMenu_->clear();
     serverAdHocCommandActions_.clear();
     for (const auto& command : commands) {
-        QAction* action = new QAction(P2QSTRING(command.getName()), this);
-        connect(action, SIGNAL(triggered(bool)), this, SLOT(handleAdHocActionTriggered(bool)));
-        serverAdHocMenu_->addAction(action);
-        serverAdHocCommandActions_.append(action);
+      QAction* action = new QAction(P2QSTRING(command.getName()), this);
+      connect(action, SIGNAL(triggered(bool)), this, SLOT(handleAdHocActionTriggered(bool)));
+      serverAdHocMenu_->addAction(action);
+      serverAdHocCommandActions_.append(action);
     }
     if (serverAdHocCommandActions_.isEmpty()) {
-        QAction* action = new QAction(tr("No Available Commands"), this);
-        action->setEnabled(false);
-        serverAdHocMenu_->addAction(action);
-        serverAdHocCommandActions_.append(action);
+      QAction* action = new QAction(tr("No Available Commands"), this);
+      action->setEnabled(false);
+      serverAdHocMenu_->addAction(action);
+      serverAdHocCommandActions_.append(action);
     }
-}
+  }
 
-void QtMainWindow::setBlockingCommandAvailable(bool isAvailable) {
+  void QtMainWindow::setBlockingCommandAvailable(bool isAvailable) {
     openBlockingListEditor_->setVisible(isAvailable);
-}
+  }
 
-void QtMainWindow::handleSubmitFormActionTriggered() {
+  void QtMainWindow::handleSubmitFormActionTriggered() {
     uiEventStream_->send(std::make_shared<FdpFormSubmitWindowOpenUIEvent>());
-}
+  }
 
-}
+} // namespace Swift

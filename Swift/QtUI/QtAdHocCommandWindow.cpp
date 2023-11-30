@@ -7,6 +7,7 @@
 #include <Swift/QtUI/QtAdHocCommandWindow.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <QBoxLayout>
 
@@ -19,7 +20,7 @@
 const int FormLayoutIndex = 1;
 
 namespace Swift {
-QtAdHocCommandWindow::QtAdHocCommandWindow(std::shared_ptr<OutgoingAdHocCommandSession> command) : command_(command) {
+  QtAdHocCommandWindow::QtAdHocCommandWindow(std::shared_ptr<OutgoingAdHocCommandSession> command) : command_(command) {
     formWidget_ = nullptr;
 
     setAttribute(Qt::WA_DeleteOnClose);
@@ -28,7 +29,7 @@ QtAdHocCommandWindow::QtAdHocCommandWindow(std::shared_ptr<OutgoingAdHocCommandS
     command->start();
 
     layout_ = new QBoxLayout(QBoxLayout::TopToBottom, this);
-    layout_->setContentsMargins(0,0,0,0);
+    layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(2);
     label_ = new QLabel(this);
     label_->setTextFormat(Qt::PlainText);
@@ -37,7 +38,7 @@ QtAdHocCommandWindow::QtAdHocCommandWindow(std::shared_ptr<OutgoingAdHocCommandS
     errorLabel_ = new QLabel(this);
     errorLabel_->setText(QString("<b>%1</b>").arg(tr("Unable to complete the command because you have been disconnected")));
     errorLabel_->setVisible(false);
-    errorLabel_->setFrameStyle(QFrame::Box|QFrame::Sunken);
+    errorLabel_->setFrameStyle(QFrame::Box | QFrame::Sunken);
     layout_->addWidget(errorLabel_);
 
     dialogButtons_ = new QDialogButtonBox(this);
@@ -67,108 +68,114 @@ QtAdHocCommandWindow::QtAdHocCommandWindow(std::shared_ptr<OutgoingAdHocCommandS
     actions_[Command::Prev] = backButton_;
     actions_[Command::Complete] = completeButton_;
     actions_[Command::Cancel] = cancelButton_;
-}
+  }
 
-QtAdHocCommandWindow::~QtAdHocCommandWindow() {
-}
+  QtAdHocCommandWindow::~QtAdHocCommandWindow() {}
 
-void QtAdHocCommandWindow::setOnline(bool online) {
+  void QtAdHocCommandWindow::setOnline(bool online) {
     if (!online) {
-        nextButton_->setEnabled(false);
-        backButton_->setEnabled(false);
-        completeButton_->setEnabled(false);
-        errorLabel_->setVisible(true);
+      nextButton_->setEnabled(false);
+      backButton_->setEnabled(false);
+      completeButton_->setEnabled(false);
+      errorLabel_->setVisible(true);
     }
-}
+  }
 
-void QtAdHocCommandWindow::closeEvent(QCloseEvent*) {
+  void QtAdHocCommandWindow::closeEvent(QCloseEvent*) {
     onClosing();
-}
+  }
 
-void QtAdHocCommandWindow::handleCancelClicked() {
+  void QtAdHocCommandWindow::handleCancelClicked() {
     command_->cancel();
     close();
-}
+  }
 
-void QtAdHocCommandWindow::handlePrevClicked() {
+  void QtAdHocCommandWindow::handlePrevClicked() {
     command_->goBack();
-}
+  }
 
-void QtAdHocCommandWindow::handleNextClicked() {
+  void QtAdHocCommandWindow::handleNextClicked() {
     command_->goNext(formWidget_ ? formWidget_->getCompletedForm() : Form::ref());
-}
+  }
 
-void QtAdHocCommandWindow::handleCompleteClicked() {
+  void QtAdHocCommandWindow::handleCompleteClicked() {
     command_->complete(formWidget_ ? formWidget_->getCompletedForm() : Form::ref());
-}
+  }
 
-void QtAdHocCommandWindow::handleNextStageReceived(Command::ref command) {
+  void QtAdHocCommandWindow::handleNextStageReceived(Command::ref command) {
     QString notes;
     for (const auto& note : command->getNotes()) {
-        if (!notes.isEmpty()) {
-            notes += "\n";
-        }
-        QString qNote(P2QSTRING(note.note));
-        switch (note.type) {
-            case Command::Note::Error: notes += tr("Error: %1").arg(qNote); break;
-            case Command::Note::Warn: notes += tr("Warning: %1").arg(qNote); break;
-            case Command::Note::Info: notes += qNote; break;
-        }
+      if (!notes.isEmpty()) {
+        notes += "\n";
+      }
+      QString qNote(P2QSTRING(note.note));
+      switch (note.type) {
+        case Command::Note::Error:
+          notes += tr("Error: %1").arg(qNote);
+          break;
+        case Command::Note::Warn:
+          notes += tr("Warning: %1").arg(qNote);
+          break;
+        case Command::Note::Info:
+          notes += qNote;
+          break;
+      }
     }
     label_->setText(notes);
     if (command->getForm()) {
-        setForm(command->getForm());
-    } else {
-        setNoForm(notes.isEmpty());
+      setForm(command->getForm());
+    }
+    else {
+      setNoForm(notes.isEmpty());
     }
     setAvailableActions(command);
-}
+  }
 
-void QtAdHocCommandWindow::handleError(ErrorPayload::ref /*error*/) {
+  void QtAdHocCommandWindow::handleError(ErrorPayload::ref /*error*/) {
     nextButton_->setEnabled(false);
     backButton_->setEnabled(false);
     completeButton_->setEnabled(false);
     label_->setText(tr("Error executing command"));
-}
+  }
 
-void QtAdHocCommandWindow::setForm(Form::ref form) {
+  void QtAdHocCommandWindow::setForm(Form::ref form) {
     form_ = form;
     delete formWidget_;
     formWidget_ = new QtFormWidget(form, this);
     layout_->insertWidget(FormLayoutIndex, formWidget_);
     show();
-}
+  }
 
-void QtAdHocCommandWindow::setNoForm(bool andHide) {
+  void QtAdHocCommandWindow::setNoForm(bool andHide) {
     form_.reset();
     delete formWidget_;
     formWidget_ = nullptr;
     resize(minimumSize());
     setVisible(!andHide);
-}
+  }
 
-typedef std::pair<Command::Action, QPushButton*> ActionButton;
+  typedef std::pair<Command::Action, QPushButton*> ActionButton;
 
-void QtAdHocCommandWindow::setAvailableActions(Command::ref /*commandResult*/) {
+  void QtAdHocCommandWindow::setAvailableActions(Command::ref /*commandResult*/) {
     okButton_->show();
     okButton_->setEnabled(true);
     for (auto&& pair : actions_) {
-        OutgoingAdHocCommandSession::ActionState state = command_->getActionState(pair.first);
-        if (state & OutgoingAdHocCommandSession::Present) {
-            okButton_->hide();
-            okButton_->setEnabled(false);
-            pair.second->show();
-        }
-        else {
-            pair.second->hide();
-        }
-        if (state & OutgoingAdHocCommandSession::Enabled) {
-            pair.second->setEnabled(true);
-        }
-        else {
-            pair.second->setEnabled(false);
-        }
+      OutgoingAdHocCommandSession::ActionState state = command_->getActionState(pair.first);
+      if (state & OutgoingAdHocCommandSession::Present) {
+        okButton_->hide();
+        okButton_->setEnabled(false);
+        pair.second->show();
+      }
+      else {
+        pair.second->hide();
+      }
+      if (state & OutgoingAdHocCommandSession::Enabled) {
+        pair.second->setEnabled(true);
+      }
+      else {
+        pair.second->setEnabled(false);
+      }
     }
-}
+  }
 
-}
+} // namespace Swift

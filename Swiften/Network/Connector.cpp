@@ -7,6 +7,7 @@
 #include <Swiften/Network/Connector.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Base/Log.h>
 #include <Swiften/Network/ConnectionFactory.h>
@@ -17,187 +18,187 @@
 
 namespace Swift {
 
-Connector::Connector(const std::string& hostname, unsigned short port, const boost::optional<std::string>& serviceLookupPrefix, DomainNameResolver* resolver, ConnectionFactory* connectionFactory, TimerFactory* timerFactory) : hostname(hostname), port(port), serviceLookupPrefix(serviceLookupPrefix), resolver(resolver), connectionFactory(connectionFactory), timerFactory(timerFactory), timeoutMilliseconds(0), queriedAllServices(true), foundSomeDNS(false) {
-}
+  Connector::Connector(const std::string& hostname, unsigned short port, const boost::optional<std::string>& serviceLookupPrefix, DomainNameResolver* resolver, ConnectionFactory* connectionFactory, TimerFactory* timerFactory) : hostname(hostname), port(port), serviceLookupPrefix(serviceLookupPrefix), resolver(resolver), connectionFactory(connectionFactory), timerFactory(timerFactory), timeoutMilliseconds(0), queriedAllServices(true), foundSomeDNS(false) {}
 
-void Connector::setTimeoutMilliseconds(int milliseconds) {
+  void Connector::setTimeoutMilliseconds(int milliseconds) {
     timeoutMilliseconds = milliseconds;
-}
+  }
 
-void Connector::start() {
+  void Connector::start() {
     SWIFT_LOG(debug) << "Starting connector for " << hostname;
     assert(!currentConnection);
     assert(!serviceQuery);
     assert(!timer);
     auto hostAddress = HostAddress::fromString(hostname);
     if (timeoutMilliseconds > 0) {
-        timer = timerFactory->createTimer(timeoutMilliseconds);
-        timer->onTick.connect(boost::bind(&Connector::handleTimeout, shared_from_this()));
+      timer = timerFactory->createTimer(timeoutMilliseconds);
+      timer->onTick.connect(boost::bind(&Connector::handleTimeout, shared_from_this()));
     }
     if (serviceLookupPrefix) {
-        queriedAllServices = false;
-        serviceQuery = resolver->createServiceQuery(*serviceLookupPrefix, hostname);
-        serviceQuery->onResult.connect(boost::bind(&Connector::handleServiceQueryResult, shared_from_this(), _1));
-        serviceQuery->run();
+      queriedAllServices = false;
+      serviceQuery = resolver->createServiceQuery(*serviceLookupPrefix, hostname);
+      serviceQuery->onResult.connect(boost::bind(&Connector::handleServiceQueryResult, shared_from_this(), _1));
+      serviceQuery->run();
     }
     else if (hostAddress) {
-        // hostname is already a valid address; skip name lookup.
-        foundSomeDNS = true;
-        addressQueryResults.push_back(hostAddress.get());
-        tryNextAddress();
-    } else {
-        queryAddress(hostname);
+      // hostname is already a valid address; skip name lookup.
+      foundSomeDNS = true;
+      addressQueryResults.push_back(hostAddress.get());
+      tryNextAddress();
     }
-}
+    else {
+      queryAddress(hostname);
+    }
+  }
 
-void Connector::stop() {
+  void Connector::stop() {
     if (currentConnection) {
-        currentConnection->onConnectFinished.disconnect(boost::bind(&Connector::handleConnectionConnectFinished, shared_from_this(), _1));
-        currentConnection->disconnect();
+      currentConnection->onConnectFinished.disconnect(boost::bind(&Connector::handleConnectionConnectFinished, shared_from_this(), _1));
+      currentConnection->disconnect();
     }
     finish(std::shared_ptr<Connection>());
-}
+  }
 
-void Connector::queryAddress(const std::string& hostname) {
+  void Connector::queryAddress(const std::string& hostname) {
     assert(!addressQuery);
     addressQuery = resolver->createAddressQuery(hostname);
     addressQuery->onResult.connect(boost::bind(&Connector::handleAddressQueryResult, shared_from_this(), _1, _2));
     addressQuery->run();
-}
+  }
 
-void Connector::handleServiceQueryResult(const std::vector<DomainNameServiceQuery::Result>& result) {
+  void Connector::handleServiceQueryResult(const std::vector<DomainNameServiceQuery::Result>& result) {
     SWIFT_LOG(debug) << result.size() << " SRV result(s)";
     serviceQueryResults = std::deque<DomainNameServiceQuery::Result>(result.begin(), result.end());
     serviceQuery.reset();
     if (!serviceQueryResults.empty()) {
-        foundSomeDNS = true;
+      foundSomeDNS = true;
     }
     tryNextServiceOrFallback();
-}
+  }
 
-void Connector::tryNextServiceOrFallback() {
+  void Connector::tryNextServiceOrFallback() {
     if (queriedAllServices) {
-        SWIFT_LOG(debug) << "Queried all services";
-        finish(std::shared_ptr<Connection>());
+      SWIFT_LOG(debug) << "Queried all services";
+      finish(std::shared_ptr<Connection>());
     }
     else if (serviceQueryResults.empty()) {
-        SWIFT_LOG(debug) << "Falling back on A resolution";
-        // Fall back on simple address resolving
-        queriedAllServices = true;
-        queryAddress(hostname);
+      SWIFT_LOG(debug) << "Falling back on A resolution";
+      // Fall back on simple address resolving
+      queriedAllServices = true;
+      queryAddress(hostname);
     }
     else {
-        SWIFT_LOG(debug) << "Querying next address";
-        queryAddress(serviceQueryResults.front().hostname);
+      SWIFT_LOG(debug) << "Querying next address";
+      queryAddress(serviceQueryResults.front().hostname);
     }
-}
+  }
 
-void Connector::handleAddressQueryResult(const std::vector<HostAddress>& addresses, boost::optional<DomainNameResolveError> error) {
+  void Connector::handleAddressQueryResult(const std::vector<HostAddress>& addresses, boost::optional<DomainNameResolveError> error) {
     SWIFT_LOG(debug) << addresses.size() << " addresses";
     addressQuery.reset();
     if (error || addresses.empty()) {
-        if (!serviceQueryResults.empty()) {
-            serviceQueryResults.pop_front();
-        }
-        tryNextServiceOrFallback();
+      if (!serviceQueryResults.empty()) {
+        serviceQueryResults.pop_front();
+      }
+      tryNextServiceOrFallback();
     }
     else {
-        foundSomeDNS = true;
-        addressQueryResults = std::deque<HostAddress>(addresses.begin(), addresses.end());
-        tryNextAddress();
+      foundSomeDNS = true;
+      addressQueryResults = std::deque<HostAddress>(addresses.begin(), addresses.end());
+      tryNextAddress();
     }
-}
+  }
 
-void Connector::tryNextAddress() {
+  void Connector::tryNextAddress() {
     if (addressQueryResults.empty()) {
-        SWIFT_LOG(debug) << "Done trying addresses. Moving on.";
-        // Done trying all addresses. Move on to the next host.
-        if (!serviceQueryResults.empty()) {
-            serviceQueryResults.pop_front();
-        }
-        tryNextServiceOrFallback();
+      SWIFT_LOG(debug) << "Done trying addresses. Moving on.";
+      // Done trying all addresses. Move on to the next host.
+      if (!serviceQueryResults.empty()) {
+        serviceQueryResults.pop_front();
+      }
+      tryNextServiceOrFallback();
     }
     else {
-        SWIFT_LOG(debug) << "Trying next address";
-        HostAddress address = addressQueryResults.front();
-        addressQueryResults.pop_front();
+      SWIFT_LOG(debug) << "Trying next address";
+      HostAddress address = addressQueryResults.front();
+      addressQueryResults.pop_front();
 
-        unsigned short connectPort = (port == 0 ? 5222 : port);
-        if (!serviceQueryResults.empty()) {
-            connectPort = serviceQueryResults.front().port;
-        }
+      unsigned short connectPort = (port == 0 ? 5222 : port);
+      if (!serviceQueryResults.empty()) {
+        connectPort = serviceQueryResults.front().port;
+      }
 
-        tryConnect(HostAddressPort(address, connectPort));
+      tryConnect(HostAddressPort(address, connectPort));
     }
-}
+  }
 
-void Connector::tryConnect(const HostAddressPort& target) {
+  void Connector::tryConnect(const HostAddressPort& target) {
     assert(!currentConnection);
     SWIFT_LOG(debug) << "Trying to connect to " << target.getAddress().toString() << ":" << target.getPort();
     currentConnection = connectionFactory->createConnection();
     currentConnection->onConnectFinished.connect(boost::bind(&Connector::handleConnectionConnectFinished, shared_from_this(), _1));
     currentConnection->connect(target);
     if (timer) {
-        timer->start();
+      timer->start();
     }
-}
+  }
 
-void Connector::handleConnectionConnectFinished(bool error) {
+  void Connector::handleConnectionConnectFinished(bool error) {
     SWIFT_LOG(debug) << "ConnectFinished: " << (error ? "error" : "success");
     if (timer) {
-            timer->stop();
-            timer.reset();
+      timer->stop();
+      timer.reset();
     }
     if (!currentConnection) {
-        // We've hit a race condition where multiple finisheds were on the eventloop queue at once.
-        // This is particularly likely on macOS where the hourly momentary wakeup while asleep
-        // can cause both a timeout and an onConnectFinished to be queued sequentially (SWIFT-232).
-        // Let the first one process as normal, but ignore the second.
-        return;
+      // We've hit a race condition where multiple finisheds were on the eventloop queue at once.
+      // This is particularly likely on macOS where the hourly momentary wakeup while asleep
+      // can cause both a timeout and an onConnectFinished to be queued sequentially (SWIFT-232).
+      // Let the first one process as normal, but ignore the second.
+      return;
     }
     currentConnection->onConnectFinished.disconnect(boost::bind(&Connector::handleConnectionConnectFinished, shared_from_this(), _1));
     if (error) {
-        currentConnection.reset();
-        if (!addressQueryResults.empty()) {
-            tryNextAddress();
+      currentConnection.reset();
+      if (!addressQueryResults.empty()) {
+        tryNextAddress();
+      }
+      else {
+        if (!serviceQueryResults.empty()) {
+          serviceQueryResults.pop_front();
         }
-        else {
-            if (!serviceQueryResults.empty()) {
-                serviceQueryResults.pop_front();
-            }
-            tryNextServiceOrFallback();
-        }
+        tryNextServiceOrFallback();
+      }
     }
     else {
-        finish(currentConnection);
+      finish(currentConnection);
     }
-}
+  }
 
-void Connector::finish(std::shared_ptr<Connection> connection) {
+  void Connector::finish(std::shared_ptr<Connection> connection) {
     if (timer) {
-        timer->stop();
-        timer->onTick.disconnect(boost::bind(&Connector::handleTimeout, shared_from_this()));
-        timer.reset();
+      timer->stop();
+      timer->onTick.disconnect(boost::bind(&Connector::handleTimeout, shared_from_this()));
+      timer.reset();
     }
     if (serviceQuery) {
-        serviceQuery->onResult.disconnect(boost::bind(&Connector::handleServiceQueryResult, shared_from_this(), _1));
-        serviceQuery.reset();
+      serviceQuery->onResult.disconnect(boost::bind(&Connector::handleServiceQueryResult, shared_from_this(), _1));
+      serviceQuery.reset();
     }
     if (addressQuery) {
-        addressQuery->onResult.disconnect(boost::bind(&Connector::handleAddressQueryResult, shared_from_this(), _1, _2));
-        addressQuery.reset();
+      addressQuery->onResult.disconnect(boost::bind(&Connector::handleAddressQueryResult, shared_from_this(), _1, _2));
+      addressQuery.reset();
     }
     if (currentConnection) {
-        currentConnection->onConnectFinished.disconnect(boost::bind(&Connector::handleConnectionConnectFinished, shared_from_this(), _1));
-        currentConnection.reset();
+      currentConnection->onConnectFinished.disconnect(boost::bind(&Connector::handleConnectionConnectFinished, shared_from_this(), _1));
+      currentConnection.reset();
     }
     onConnectFinished(connection, (connection || foundSomeDNS) ? std::shared_ptr<Error>() : std::make_shared<DomainNameResolveError>());
-}
+  }
 
-void Connector::handleTimeout() {
+  void Connector::handleTimeout() {
     SWIFT_LOG(debug) << "Timeout";
     SWIFT_LOG_ASSERT(currentConnection, error) << "Connection not valid but triggered a timeout";
     handleConnectionConnectFinished(true);
-}
+  }
 
-}
+} // namespace Swift

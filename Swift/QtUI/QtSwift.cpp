@@ -10,6 +10,7 @@
 #include <string>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
 
 #include <QApplication>
 #include <QFile>
@@ -84,76 +85,67 @@
 #include <Swift/QtUI/CocoaUIHelpers.h>
 #endif
 
-namespace Swift{
+namespace Swift {
 
-po::options_description QtSwift::getOptionsDescription() {
+  po::options_description QtSwift::getOptionsDescription() {
     po::options_description result("Options");
-    result.add_options()
-        ("debug", "Turn on debug logging")
-        ("help", "Show this help message")
-        ("version", "Show version information")
-        ("no-tabs", "Don't manage chat windows in tabs (unsupported)")
-        ("latency-debug", "Use latency debugging (unsupported)")
-        ("enable-jid-adhocs", "Enable AdHoc commands to custom JIDs.")
+    result.add_options()("debug", "Turn on debug logging")("help", "Show this help message")("version", "Show version information")("no-tabs", "Don't manage chat windows in tabs (unsupported)")("latency-debug", "Use latency debugging (unsupported)")("enable-jid-adhocs", "Enable AdHoc commands to custom JIDs.")
 #if QT_VERSION >= 0x040800
-        ("language", po::value<std::string>(), "Use a specific language, instead of the system-wide one")
+      ("language", po::value<std::string>(), "Use a specific language, instead of the system-wide one")
 #endif
-        ("logfile", po::value<std::string>()->implicit_value(""), "Save all logging information to a file")
-        ("enable-future", "Enable future features (unsupported). This will persist across restarts")
-        ("disable-future", "Disable future features. This will persist across restarts")
-        ;
+        ("logfile", po::value<std::string>()->implicit_value(""), "Save all logging information to a file")("enable-future", "Enable future features (unsupported). This will persist across restarts")("disable-future", "Disable future features. This will persist across restarts");
     return result;
-}
+  }
 
-XMLSettingsProvider* QtSwift::loadSettingsFile(const QString& fileName) {
+  XMLSettingsProvider* QtSwift::loadSettingsFile(const QString& fileName) {
     QFile configFile(fileName);
     if (configFile.exists() && configFile.open(QIODevice::ReadOnly)) {
-        QString xmlString;
-        while (!configFile.atEnd()) {
-            QByteArray line = configFile.readLine();
-            xmlString += line + "\n";
-        }
-        return new XMLSettingsProvider(Q2PSTRING(xmlString));
+      QString xmlString;
+      while (!configFile.atEnd()) {
+        QByteArray line = configFile.readLine();
+        xmlString += line + "\n";
+      }
+      return new XMLSettingsProvider(Q2PSTRING(xmlString));
     }
     return new XMLSettingsProvider("");
-}
+  }
 
-void QtSwift::loadEmoticonsFile(const QString& fileName, std::map<std::string, std::string>& emoticons)  {
+  void QtSwift::loadEmoticonsFile(const QString& fileName, std::map<std::string, std::string>& emoticons) {
     QFile file(fileName);
     if (file.exists() && file.open(QIODevice::ReadOnly)) {
-        while (!file.atEnd()) {
-            QString line = file.readLine();
-            line.replace("\n", "");
-            line.replace("\r", "");
-            QStringList tokens = line.split(" ");
-            if (tokens.size() == 2) {
-                QString emoticonFile = tokens[1];
-                if (!emoticonFile.startsWith(":/") && !emoticonFile.startsWith("qrc:/")) {
-                    emoticonFile = "file://" + emoticonFile;
-                }
-                emoticons[Q2PSTRING(tokens[0])] = Q2PSTRING(emoticonFile);
-            }
+      while (!file.atEnd()) {
+        QString line = file.readLine();
+        line.replace("\n", "");
+        line.replace("\r", "");
+        QStringList tokens = line.split(" ");
+        if (tokens.size() == 2) {
+          QString emoticonFile = tokens[1];
+          if (!emoticonFile.startsWith(":/") && !emoticonFile.startsWith("qrc:/")) {
+            emoticonFile = "file://" + emoticonFile;
+          }
+          emoticons[Q2PSTRING(tokens[0])] = Q2PSTRING(emoticonFile);
         }
+      }
     }
-}
+  }
 
-const std::string& QtSwift::updateChannelToFeed(const std::string& channel) {
+  const std::string& QtSwift::updateChannelToFeed(const std::string& channel) {
     static const std::string invalidChannel;
     if (channel == UpdateFeeds::StableChannel) {
-        return UpdateFeeds::StableAppcastFeed;
+      return UpdateFeeds::StableAppcastFeed;
     }
     else if (channel == UpdateFeeds::TestingChannel) {
-        return UpdateFeeds::TestingAppcastFeed;
+      return UpdateFeeds::TestingAppcastFeed;
     }
     else if (channel == UpdateFeeds::DevelopmentChannel) {
-        return UpdateFeeds::DevelopmentAppcastFeed;
+      return UpdateFeeds::DevelopmentAppcastFeed;
     }
     else {
-        return invalidChannel;
+      return invalidChannel;
     }
-}
+  }
 
-QtSwift::QtSwift(const po::variables_map& options) : networkFactories_(&clientMainThreadCaller_), autoUpdater_(nullptr), idleDetector_(&idleQuerier_, networkFactories_.getTimerFactory(), 1000) {
+  QtSwift::QtSwift(const po::variables_map& options) : networkFactories_(&clientMainThreadCaller_), autoUpdater_(nullptr), idleDetector_(&idleQuerier_, networkFactories_.getTimerFactory(), 1000) {
     QCoreApplication::setApplicationName(SWIFT_APPLICATION_NAME);
     QCoreApplication::setOrganizationName(SWIFT_ORGANIZATION_NAME);
     QCoreApplication::setOrganizationDomain(SWIFT_ORGANIZATION_DOMAIN);
@@ -174,62 +166,43 @@ QtSwift::QtSwift(const po::variables_map& options) : networkFactories_(&clientMa
     connect(splitter_, SIGNAL(wantsToAddAccount()), this, SLOT(handleWantsToAddAccount()));
 
     if (options.count("debug")) {
-        Log::setLogLevel(Swift::Log::debug);
+      Log::setLogLevel(Swift::Log::debug);
     }
 
     if (options.count("enable-future")) {
-        settingsHierarchy_->storeSetting(SettingConstants::FUTURE, true);
+      settingsHierarchy_->storeSetting(SettingConstants::FUTURE, true);
     }
 
     if (options.count("disable-future")) {
-        settingsHierarchy_->storeSetting(SettingConstants::FUTURE, false);
+      settingsHierarchy_->storeSetting(SettingConstants::FUTURE, false);
     }
 
     if (options.count("logfile")) {
-        try {
-            std::string fileName = options["logfile"].as<std::string>();
-            Log::setLogFile(fileName);
-        }
-        catch (...) {
-            SWIFT_LOG(error) << "Error while retrieving the specified log file name from the command line";
-        }
+      try {
+        std::string fileName = options["logfile"].as<std::string>();
+        Log::setLogFile(fileName);
+      }
+      catch (...) {
+        SWIFT_LOG(error) << "Error while retrieving the specified log file name from the command line";
+      }
     }
     //TODO this old option can be purged
     useDelayForLatency_ = options.count("latency-debug") > 0;
 
     // Load fonts
-    std::vector<std::string> fontNames = {
-        "themes/Default/Lato2OFL/Lato-Black.ttf",
-        "themes/Default/Lato2OFL/Lato-BlackItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Bold.ttf",
-        "themes/Default/Lato2OFL/Lato-BoldItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Hairline.ttf",
-        "themes/Default/Lato2OFL/Lato-HairlineItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Heavy.ttf",
-        "themes/Default/Lato2OFL/Lato-HeavyItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Italic.ttf",
-        "themes/Default/Lato2OFL/Lato-Light.ttf",
-        "themes/Default/Lato2OFL/Lato-LightItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Medium.ttf",
-        "themes/Default/Lato2OFL/Lato-MediumItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Regular.ttf",
-        "themes/Default/Lato2OFL/Lato-Semibold.ttf",
-        "themes/Default/Lato2OFL/Lato-SemiboldItalic.ttf",
-        "themes/Default/Lato2OFL/Lato-Thin.ttf",
-        "themes/Default/Lato2OFL/Lato-ThinItalic.ttf"
-    };
+    std::vector<std::string> fontNames = {"themes/Default/Lato2OFL/Lato-Black.ttf", "themes/Default/Lato2OFL/Lato-BlackItalic.ttf", "themes/Default/Lato2OFL/Lato-Bold.ttf", "themes/Default/Lato2OFL/Lato-BoldItalic.ttf", "themes/Default/Lato2OFL/Lato-Hairline.ttf", "themes/Default/Lato2OFL/Lato-HairlineItalic.ttf", "themes/Default/Lato2OFL/Lato-Heavy.ttf", "themes/Default/Lato2OFL/Lato-HeavyItalic.ttf", "themes/Default/Lato2OFL/Lato-Italic.ttf", "themes/Default/Lato2OFL/Lato-Light.ttf", "themes/Default/Lato2OFL/Lato-LightItalic.ttf", "themes/Default/Lato2OFL/Lato-Medium.ttf", "themes/Default/Lato2OFL/Lato-MediumItalic.ttf", "themes/Default/Lato2OFL/Lato-Regular.ttf", "themes/Default/Lato2OFL/Lato-Semibold.ttf", "themes/Default/Lato2OFL/Lato-SemiboldItalic.ttf", "themes/Default/Lato2OFL/Lato-Thin.ttf", "themes/Default/Lato2OFL/Lato-ThinItalic.ttf"};
 
     for (auto&& fontName : fontNames) {
-        std::string fontPath = std::string(":/") + fontName;
-        int error = QFontDatabase::addApplicationFont(P2QSTRING(fontPath));
-        SWIFT_LOG_ASSERT(error != -1, error) << "Failed to load font " << fontPath;
+      std::string fontPath = std::string(":/") + fontName;
+      int error = QFontDatabase::addApplicationFont(P2QSTRING(fontPath));
+      SWIFT_LOG_ASSERT(error != -1, error) << "Failed to load font " << fontPath;
     }
 
 #ifdef SWIFTEN_PLATFORM_LINUX
     std::string fontPath = std::string(":/themes/Default/Noto/NotoColorEmoji.ttf");
     int error = QFontDatabase::addApplicationFont(P2QSTRING(fontPath));
     SWIFT_LOG_ASSERT(error != -1, error) << "Failed to load font " << fontPath;
-    QFont::insertSubstitution(QApplication::font().family(),"NotoColorEmoji");
+    QFont::insertSubstitution(QApplication::font().family(), "NotoColorEmoji");
 #endif
 #ifdef SWIFTEN_PLATFORM_WINDOWS
     QFont::insertSubstitution(QApplication::font().family(), "Segoe UI Emoji");
@@ -276,35 +249,34 @@ QtSwift::QtSwift(const po::variables_map& options) : networkFactories_(&clientMa
     splitter_->show();
 
     PlatformAutoUpdaterFactory autoUpdaterFactory;
-    if (autoUpdaterFactory.isSupported() && settingsHierarchy_->getSetting(QtUISettingConstants::ENABLE_SOFTWARE_UPDATES)
-        && !settingsHierarchy_->getSetting(QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL).empty()) {
-        autoUpdater_ = autoUpdaterFactory.createAutoUpdater(updateChannelToFeed(settingsHierarchy_->getSetting(QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL)));
-        autoUpdater_->checkForUpdates();
-        autoUpdater_->onUpdateStateChanged.connect(boost::bind(&QtSwift::handleAutoUpdaterStateChanged, this, _1));
+    if (autoUpdaterFactory.isSupported() && settingsHierarchy_->getSetting(QtUISettingConstants::ENABLE_SOFTWARE_UPDATES) && !settingsHierarchy_->getSetting(QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL).empty()) {
+      autoUpdater_ = autoUpdaterFactory.createAutoUpdater(updateChannelToFeed(settingsHierarchy_->getSetting(QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL)));
+      autoUpdater_->checkForUpdates();
+      autoUpdater_->onUpdateStateChanged.connect(boost::bind(&QtSwift::handleAutoUpdaterStateChanged, this, _1));
 
-        settingsHierarchy_->onSettingChanged.connect([&](const std::string& path) {
-            if (path == QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL.getKey()) {
-                autoUpdater_->setAppcastFeed(updateChannelToFeed(settingsHierarchy_->getSetting(QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL)));
-                autoUpdater_->checkForUpdates();
-            }
-        });
+      settingsHierarchy_->onSettingChanged.connect([&](const std::string& path) {
+        if (path == QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL.getKey()) {
+          autoUpdater_->setAppcastFeed(updateChannelToFeed(settingsHierarchy_->getSetting(QtUISettingConstants::SOFTWARE_UPDATE_CHANNEL)));
+          autoUpdater_->checkForUpdates();
+        }
+      });
     }
     migrateLastLoginAccount();
     restoreAccounts();
     connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(handleAboutToQuit()));
-}
+  }
 
-QtSwift::~QtSwift() {
+  QtSwift::~QtSwift() {
     delete autoUpdater_;
     for (auto* factory : uiFactories_) {
-        delete factory;
+      delete factory;
     }
     for (auto* controller : accountControllers_) {
-        delete controller;
+      delete controller;
     }
     delete notifier_;
     for (auto* tray : systemTrays_) {
-        delete tray;
+      delete tray;
     }
     delete splitter_;
     delete settingsHierarchy_;
@@ -317,129 +289,138 @@ QtSwift::~QtSwift() {
     delete certificateStorageFactory_;
     delete storagesFactory_;
     delete applicationPathProvider_;
-}
+  }
 
-void QtSwift::handleAboutToQuit() {
+  void QtSwift::handleAboutToQuit() {
 #if defined(SWIFTEN_PLATFORM_MACOSX)
     // This is required so Sparkle knows about the application shutting down
     // and can update the application in background.
-     CocoaUIHelpers::sendCocoaApplicationWillTerminateNotification();
+    CocoaUIHelpers::sendCocoaApplicationWillTerminateNotification();
 #endif
-}
+  }
 
-void QtSwift::handleAutoUpdaterStateChanged(AutoUpdater::State updatedState) {
+  void QtSwift::handleAutoUpdaterStateChanged(AutoUpdater::State updatedState) {
     switch (updatedState) {
-    case AutoUpdater::State::NotCheckedForUpdatesYet:
+      case AutoUpdater::State::NotCheckedForUpdatesYet:
         break;
-    case AutoUpdater::State::CheckingForUpdate:
+      case AutoUpdater::State::CheckingForUpdate:
         break;
-    case AutoUpdater::State::DownloadingUpdate:
+      case AutoUpdater::State::DownloadingUpdate:
         break;
-    case AutoUpdater::State::ErrorCheckingForUpdate:
+      case AutoUpdater::State::ErrorCheckingForUpdate:
         break;
-    case AutoUpdater::State::NoUpdateAvailable:
+      case AutoUpdater::State::NoUpdateAvailable:
         break;
-    case AutoUpdater::State::RestartToInstallUpdate:
-        notifier_->showMessage(Notifier::SystemMessage, Q2PSTRING(tr("Swift Update Available")), Q2PSTRING(tr("Restart Swift to update to the new Swift version.")), "", [](){});
+      case AutoUpdater::State::RestartToInstallUpdate:
+        notifier_->showMessage(Notifier::SystemMessage, Q2PSTRING(tr("Swift Update Available")), Q2PSTRING(tr("Restart Swift to update to the new Swift version.")), "", []() {});
     }
-}
+  }
 
-void QtSwift::handleWantsToAddAccount() {
+  void QtSwift::handleWantsToAddAccount() {
     auto loginWindow = addAccount();
     if (!settingsHierarchy_->getSetting(SettingConstants::FORGET_PASSWORDS)) {
-        for (const auto& profile : settingsHierarchy_->getAvailableProfiles()) {
-            ProfileSettingsProvider profileSettings(profile, settingsHierarchy_);
-            if (profileSettings.getIntSetting("enabled", 0)) {
-                // No point showing accounts that're already logged in
-                continue;
-            }
-            const auto& password = profileSettings.getStringSetting("pass");
-            const auto& certificate = profileSettings.getStringSetting("certificate");
-            const auto& jid = profileSettings.getStringSetting("jid");
-            const auto& clientOptions = parseClientOptions(profileSettings.getStringSetting("options"));
-            loginWindow->addAvailableAccount(jid, password, certificate, clientOptions);
+      for (const auto& profile : settingsHierarchy_->getAvailableProfiles()) {
+        ProfileSettingsProvider profileSettings(profile, settingsHierarchy_);
+        if (profileSettings.getIntSetting("enabled", 0)) {
+          // No point showing accounts that're already logged in
+          continue;
         }
+        const auto& password = profileSettings.getStringSetting("pass");
+        const auto& certificate = profileSettings.getStringSetting("certificate");
+        const auto& jid = profileSettings.getStringSetting("jid");
+        const auto& clientOptions = parseClientOptions(profileSettings.getStringSetting("options"));
+        loginWindow->addAvailableAccount(jid, password, certificate, clientOptions);
+      }
     }
-}
+  }
 
-void QtSwift::restoreAccounts() {
+  void QtSwift::restoreAccounts() {
     if (!settingsHierarchy_->getSetting(SettingConstants::FORGET_PASSWORDS)) {
-        for (const auto& profile : settingsHierarchy_->getAvailableProfiles()) {
-            ProfileSettingsProvider profileSettings(profile, settingsHierarchy_);
-            if (!profileSettings.getIntSetting("enabled", 0)) {
-                continue;
-            }
-            const auto& jid = profileSettings.getStringSetting("jid");
-            const auto& password = profileSettings.getStringSetting("pass");
-            const auto& certificate = profileSettings.getStringSetting("certificate");
-            const auto& clientOptions = parseClientOptions(profileSettings.getStringSetting("options"));
-            auto loginWindow = addAccount();
-            loginWindow->addAvailableAccount(jid, password, certificate, clientOptions);
-            loginWindow->loginClicked();
+      for (const auto& profile : settingsHierarchy_->getAvailableProfiles()) {
+        ProfileSettingsProvider profileSettings(profile, settingsHierarchy_);
+        if (!profileSettings.getIntSetting("enabled", 0)) {
+          continue;
         }
+        const auto& jid = profileSettings.getStringSetting("jid");
+        const auto& password = profileSettings.getStringSetting("pass");
+        const auto& certificate = profileSettings.getStringSetting("certificate");
+        const auto& clientOptions = parseClientOptions(profileSettings.getStringSetting("options"));
+        auto loginWindow = addAccount();
+        loginWindow->addAvailableAccount(jid, password, certificate, clientOptions);
+        loginWindow->loginClicked();
+      }
     }
-}
+  }
 
-void QtSwift::migrateLastLoginAccount() {
+  void QtSwift::migrateLastLoginAccount() {
     const SettingsProvider::Setting<bool> loginAutomatically = SettingsProvider::Setting<bool>("loginAutomatically", false);
     if (settingsHierarchy_->getSetting(loginAutomatically)) {
-        auto selectedLoginJID = settingsHierarchy_->getSetting(SettingsProvider::Setting<std::string>("lastLoginJID", ""));
-        for (const auto& profile : settingsHierarchy_->getAvailableProfiles()) {
-            ProfileSettingsProvider profileSettings(profile, settingsHierarchy_);
-            if (profileSettings.getStringSetting("jid") == selectedLoginJID) {
-                profileSettings.storeInt("enabled", 1);
-                break;
-            }
+      auto selectedLoginJID = settingsHierarchy_->getSetting(SettingsProvider::Setting<std::string>("lastLoginJID", ""));
+      for (const auto& profile : settingsHierarchy_->getAvailableProfiles()) {
+        ProfileSettingsProvider profileSettings(profile, settingsHierarchy_);
+        if (profileSettings.getStringSetting("jid") == selectedLoginJID) {
+          profileSettings.storeInt("enabled", 1);
+          break;
         }
-        settingsHierarchy_->storeSetting(loginAutomatically, false);
+      }
+      settingsHierarchy_->storeSetting(loginAutomatically, false);
     }
-}
+  }
 
-QtLoginWindow* QtSwift::addAccount() {
+  QtLoginWindow* QtSwift::addAccount() {
     if (uiFactories_.size() > 0) {
-        // Don't add the first tray (see note above)
-        systemTrays_.push_back(new QtSystemTray());
+      // Don't add the first tray (see note above)
+      systemTrays_.push_back(new QtSystemTray());
     }
     auto tabs = new QtChatTabs(settingsHierarchy_, true);
     QtUIFactory* uiFactory = new QtUIFactory(settingsHierarchy_, qtSettings_, tabs, splitter_, systemTrays_[systemTrays_.size() - 1], networkFactories_.getTimerFactory(), statusCache_, autoUpdater_, emoticons_, enableAdHocCommandOnJID_);
     uiFactories_.push_back(uiFactory);
-    AccountController* accountController = new AccountController(
-        &clientMainThreadCaller_,
-        &networkFactories_,
-        uiFactory,
-        settingsHierarchy_,
-        systemTrays_[systemTrays_.size() - 1],
-        soundPlayer_,
-        storagesFactory_,
-        certificateStorageFactory_,
-        dock_,
-        notifier_,
-        uriHandler_,
-        &idleDetector_,
-        emoticons_,
-        useDelayForLatency_);
+    AccountController* accountController = new AccountController(&clientMainThreadCaller_, &networkFactories_, uiFactory, settingsHierarchy_, systemTrays_[systemTrays_.size() - 1], soundPlayer_, storagesFactory_, certificateStorageFactory_, dock_, notifier_, uriHandler_, &idleDetector_, emoticons_, useDelayForLatency_);
     accountControllers_.push_back(accountController);
 
     //FIXME - accountController has already created the window, so we can pass null here and get the old one
     auto loginWindow = uiFactory->createLoginWindow(nullptr);
 
     return dynamic_cast<QtLoginWindow*>(loginWindow);
-}
+  }
 
-//FIXME: Switch all this to boost::serialise
+  //FIXME: Switch all this to boost::serialise
 
-#define CHECK_PARSE_LENGTH if (i >= segments.size()) {return result;}
-#define PARSE_INT_RAW(defaultValue) CHECK_PARSE_LENGTH intVal = defaultValue; try {intVal = boost::lexical_cast<int>(segments[i]);} catch(const boost::bad_lexical_cast&) {};i++;
-#define PARSE_STRING_RAW CHECK_PARSE_LENGTH stringVal = byteArrayToString(Base64::decode(segments[i]));i++;
+#define CHECK_PARSE_LENGTH                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  if (i >= segments.size()) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+    return result;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+  }
+#define PARSE_INT_RAW(defaultValue)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+  CHECK_PARSE_LENGTH intVal = defaultValue;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+  try {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+    intVal = boost::lexical_cast<int>(segments[i]);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+  }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+  catch (const boost::bad_lexical_cast&) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+  i++;
+#define PARSE_STRING_RAW                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+  CHECK_PARSE_LENGTH stringVal = byteArrayToString(Base64::decode(segments[i]));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+  i++;
 
-#define PARSE_BOOL(option, defaultValue) PARSE_INT_RAW(defaultValue); result.option = (intVal == 1);
-#define PARSE_INT(option, defaultValue) PARSE_INT_RAW(defaultValue); result.option = intVal;
-#define PARSE_STRING(option) PARSE_STRING_RAW; result.option = stringVal;
-#define PARSE_SAFE_STRING(option) PARSE_STRING_RAW; result.option = SafeString(createSafeByteArray(stringVal));
-#define PARSE_URL(option) {PARSE_STRING_RAW; result.option = URL::fromString(stringVal);}
+#define PARSE_BOOL(option, defaultValue)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+  PARSE_INT_RAW(defaultValue);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+  result.option = (intVal == 1);
+#define PARSE_INT(option, defaultValue)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+  PARSE_INT_RAW(defaultValue);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+  result.option = intVal;
+#define PARSE_STRING(option)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+  PARSE_STRING_RAW;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+  result.option = stringVal;
+#define PARSE_SAFE_STRING(option)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+  PARSE_STRING_RAW;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+  result.option = SafeString(createSafeByteArray(stringVal));
+#define PARSE_URL(option)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+  {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+    PARSE_STRING_RAW;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    result.option = URL::fromString(stringVal);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+  }
 
-
-ClientOptions QtSwift::parseClientOptions(const std::string& optionString) {
+  ClientOptions QtSwift::parseClientOptions(const std::string& optionString) {
     ClientOptions result;
     size_t i = 0;
     int intVal = 0;
@@ -449,10 +430,16 @@ ClientOptions QtSwift::parseClientOptions(const std::string& optionString) {
     PARSE_BOOL(useStreamCompression, 1)
     PARSE_INT_RAW(-1)
     switch (intVal) {
-    case 1: result.useTLS = ClientOptions::NeverUseTLS; break;
-    case 2: result.useTLS = ClientOptions::UseTLSWhenAvailable; break;
-    case 3: result.useTLS = ClientOptions::RequireTLS; break;
-    default:;
+      case 1:
+        result.useTLS = ClientOptions::NeverUseTLS;
+        break;
+      case 2:
+        result.useTLS = ClientOptions::UseTLSWhenAvailable;
+        break;
+      case 3:
+        result.useTLS = ClientOptions::RequireTLS;
+        break;
+      default:;
     }
     PARSE_BOOL(allowPLAINWithoutTLS, 0)
     PARSE_BOOL(useStreamResumption, 0)
@@ -461,10 +448,18 @@ ClientOptions QtSwift::parseClientOptions(const std::string& optionString) {
     PARSE_INT(manualPort, -1)
     PARSE_INT_RAW(-1)
     switch (intVal) {
-    case 1: result.proxyType = ClientOptions::NoProxy; break;
-    case 2: result.proxyType = ClientOptions::SystemConfiguredProxy; break;
-    case 3: result.proxyType = ClientOptions::SOCKS5Proxy; break;
-    case 4: result.proxyType = ClientOptions::HTTPConnectProxy; break;
+      case 1:
+        result.proxyType = ClientOptions::NoProxy;
+        break;
+      case 2:
+        result.proxyType = ClientOptions::SystemConfiguredProxy;
+        break;
+      case 3:
+        result.proxyType = ClientOptions::SOCKS5Proxy;
+        break;
+      case 4:
+        result.proxyType = ClientOptions::HTTPConnectProxy;
+        break;
     }
     PARSE_STRING(manualProxyHostname)
     PARSE_INT(manualProxyPort, -1)
@@ -476,7 +471,6 @@ ClientOptions QtSwift::parseClientOptions(const std::string& optionString) {
     PARSE_BOOL(singleSignOn, false)
 
     return result;
-}
+  }
 
-
-}
+} // namespace Swift

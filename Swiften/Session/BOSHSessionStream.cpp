@@ -4,10 +4,11 @@
  * See the COPYING file for more information.
  */
 
-
 #include <Swiften/Session/BOSHSessionStream.h>
 
 #include <boost/bind.hpp>
+using namespace boost::placeholders;
+
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
@@ -25,29 +26,12 @@
 
 namespace Swift {
 
-BOSHSessionStream::BOSHSessionStream(const URL& boshURL,
-        PayloadParserFactoryCollection* payloadParserFactories,
-        PayloadSerializerCollection* payloadSerializers,
-        ConnectionFactory* connectionFactory,
-        TLSContextFactory* tlsContextFactory,
-        TimerFactory* timerFactory,
-        XMLParserFactory* xmlParserFactory,
-        EventLoop* eventLoop,
-        DomainNameResolver* resolver,
-        const std::string& to,
-        const URL& boshHTTPConnectProxyURL,
-        const SafeString& boshHTTPConnectProxyAuthID,
-        const SafeString& boshHTTPConnectProxyAuthPassword,
-        const TLSOptions& tlsOptions,
-        std::shared_ptr<HTTPTrafficFilter> trafficFilter) :
-            available(false),
-            eventLoop(eventLoop),
-            firstHeader(true) {
+  BOSHSessionStream::BOSHSessionStream(const URL& boshURL, PayloadParserFactoryCollection* payloadParserFactories, PayloadSerializerCollection* payloadSerializers, ConnectionFactory* connectionFactory, TLSContextFactory* tlsContextFactory, TimerFactory* timerFactory, XMLParserFactory* xmlParserFactory, EventLoop* eventLoop, DomainNameResolver* resolver, const std::string& to, const URL& boshHTTPConnectProxyURL, const SafeString& boshHTTPConnectProxyAuthID, const SafeString& boshHTTPConnectProxyAuthPassword, const TLSOptions& tlsOptions, std::shared_ptr<HTTPTrafficFilter> trafficFilter) : available(false), eventLoop(eventLoop), firstHeader(true) {
 
     boost::mt19937 random;
-    boost::uniform_int<unsigned long long> dist(0, (1LL<<53) - 1);
+    boost::uniform_int<unsigned long long> dist(0, (1LL << 53) - 1);
     random.seed(static_cast<unsigned int>(time(nullptr)));
-    unsigned long long initialRID = boost::variate_generator<boost::mt19937&, boost::uniform_int<unsigned long long> >(random, dist)();
+    unsigned long long initialRID = boost::variate_generator<boost::mt19937&, boost::uniform_int<unsigned long long>>(random, dist)();
 
     connectionPool = new BOSHConnectionPool(boshURL, resolver, connectionFactory, xmlParserFactory, tlsContextFactory, timerFactory, eventLoop, to, initialRID, boshHTTPConnectProxyURL, boshHTTPConnectProxyAuthID, boshHTTPConnectProxyAuthPassword, tlsOptions, trafficFilter);
     connectionPool->onSessionTerminated.connect(boost::bind(&BOSHSessionStream::handlePoolSessionTerminated, this, _1));
@@ -63,9 +47,9 @@ BOSHSessionStream::BOSHSessionStream(const URL& boshURL,
     xmppLayer->onWriteData.connect(boost::bind(&BOSHSessionStream::handleXMPPLayerDataWritten, this, _1));
 
     available = true;
-}
+  }
 
-BOSHSessionStream::~BOSHSessionStream() {
+  BOSHSessionStream::~BOSHSessionStream() {
     BOSHSessionStream::close();
     connectionPool->onSessionTerminated.disconnect(boost::bind(&BOSHSessionStream::handlePoolSessionTerminated, this, _1));
     connectionPool->onSessionStarted.disconnect(boost::bind(&BOSHSessionStream::handlePoolSessionStarted, this));
@@ -81,145 +65,142 @@ BOSHSessionStream::~BOSHSessionStream() {
     xmppLayer->onWriteData.disconnect(boost::bind(&BOSHSessionStream::handleXMPPLayerDataWritten, this, _1));
     delete xmppLayer;
     xmppLayer = nullptr;
-}
+  }
 
-void BOSHSessionStream::open() {
+  void BOSHSessionStream::open() {
     connectionPool->setTLSCertificate(getTLSCertificate());
     connectionPool->open();
-}
+  }
 
-void BOSHSessionStream::handlePoolXMPPDataRead(const SafeByteArray& data) {
+  void BOSHSessionStream::handlePoolXMPPDataRead(const SafeByteArray& data) {
     xmppLayer->handleDataRead(data);
-}
+  }
 
-void BOSHSessionStream::writeElement(std::shared_ptr<ToplevelElement> element) {
+  void BOSHSessionStream::writeElement(std::shared_ptr<ToplevelElement> element) {
     assert(available);
     xmppLayer->writeElement(element);
-}
+  }
 
-void BOSHSessionStream::writeFooter() {
+  void BOSHSessionStream::writeFooter() {
     connectionPool->writeFooter();
-}
+  }
 
-void BOSHSessionStream::writeData(const std::string& data) {
+  void BOSHSessionStream::writeData(const std::string& data) {
     assert(available);
     xmppLayer->writeData(data);
-}
+  }
 
-void BOSHSessionStream::close() {
+  void BOSHSessionStream::close() {
     connectionPool->close();
-}
+  }
 
-bool BOSHSessionStream::isOpen() {
+  bool BOSHSessionStream::isOpen() {
     return available;
-}
+  }
 
-bool BOSHSessionStream::supportsTLSEncryption() {
+  bool BOSHSessionStream::supportsTLSEncryption() {
     return false;
-}
+  }
 
-void BOSHSessionStream::addTLSEncryption() {
+  void BOSHSessionStream::addTLSEncryption() {
     assert(available);
-}
+  }
 
-bool BOSHSessionStream::isTLSEncrypted() {
+  bool BOSHSessionStream::isTLSEncrypted() {
     return connectionPool->isTLSEncrypted();
-}
+  }
 
-Certificate::ref BOSHSessionStream::getPeerCertificate() const {
+  Certificate::ref BOSHSessionStream::getPeerCertificate() const {
     return connectionPool->getPeerCertificate();
-}
+  }
 
-std::vector<Certificate::ref> BOSHSessionStream::getPeerCertificateChain() const {
+  std::vector<Certificate::ref> BOSHSessionStream::getPeerCertificateChain() const {
     return connectionPool->getPeerCertificateChain();
-}
+  }
 
-std::shared_ptr<CertificateVerificationError> BOSHSessionStream::getPeerCertificateVerificationError() const {
+  std::shared_ptr<CertificateVerificationError> BOSHSessionStream::getPeerCertificateVerificationError() const {
     return connectionPool->getPeerCertificateVerificationError();
-}
+  }
 
-ByteArray BOSHSessionStream::getTLSFinishMessage() const {
+  ByteArray BOSHSessionStream::getTLSFinishMessage() const {
     return ByteArray();
-}
+  }
 
-bool BOSHSessionStream::supportsZLibCompression() {
+  bool BOSHSessionStream::supportsZLibCompression() {
     return false;
-}
+  }
 
-void BOSHSessionStream::addZLibCompression() {
+  void BOSHSessionStream::addZLibCompression() {}
 
-}
-
-void BOSHSessionStream::setWhitespacePingEnabled(bool /*enabled*/) {
+  void BOSHSessionStream::setWhitespacePingEnabled(bool /*enabled*/) {
     return;
-}
+  }
 
-void BOSHSessionStream::resetXMPPParser() {
+  void BOSHSessionStream::resetXMPPParser() {
     xmppLayer->resetParser();
-}
+  }
 
-void BOSHSessionStream::handleStreamStartReceived(const ProtocolHeader& header) {
+  void BOSHSessionStream::handleStreamStartReceived(const ProtocolHeader& header) {
     onStreamStartReceived(header);
-}
+  }
 
-void BOSHSessionStream::handleElementReceived(std::shared_ptr<ToplevelElement> element) {
+  void BOSHSessionStream::handleElementReceived(std::shared_ptr<ToplevelElement> element) {
     onElementReceived(element);
-}
+  }
 
-void BOSHSessionStream::handleXMPPError() {
+  void BOSHSessionStream::handleXMPPError() {
     available = false;
     onClosed(std::make_shared<SessionStreamError>(SessionStreamError::ParseError));
-}
+  }
 
-void BOSHSessionStream::handlePoolSessionStarted() {
+  void BOSHSessionStream::handlePoolSessionStarted() {
     fakeStreamHeaderReceipt();
-}
+  }
 
-void BOSHSessionStream::handlePoolSessionTerminated(BOSHError::ref error) {
+  void BOSHSessionStream::handlePoolSessionTerminated(BOSHError::ref error) {
     eventLoop->postEvent(boost::bind(&BOSHSessionStream::fakeStreamFooterReceipt, this, error), shared_from_this());
-}
+  }
 
-void BOSHSessionStream::handlePoolTLSEstablished() {
+  void BOSHSessionStream::handlePoolTLSEstablished() {
     onTLSEncrypted();
-}
+  }
 
-void BOSHSessionStream::writeHeader(const ProtocolHeader& header) {
+  void BOSHSessionStream::writeHeader(const ProtocolHeader& header) {
     streamHeader = header;
     /*First time we're told to do this, don't (the sending of the initial header is handled on connect)
       On subsequent requests we should restart the stream the BOSH way.
     */
     if (!firstHeader) {
-        eventLoop->postEvent(boost::bind(&BOSHSessionStream::fakeStreamHeaderReceipt, this), shared_from_this());
-        eventLoop->postEvent(boost::bind(&BOSHConnectionPool::restartStream, connectionPool), shared_from_this());
+      eventLoop->postEvent(boost::bind(&BOSHSessionStream::fakeStreamHeaderReceipt, this), shared_from_this());
+      eventLoop->postEvent(boost::bind(&BOSHConnectionPool::restartStream, connectionPool), shared_from_this());
     }
     firstHeader = false;
-}
+  }
 
-
-void BOSHSessionStream::fakeStreamHeaderReceipt() {
+  void BOSHSessionStream::fakeStreamHeaderReceipt() {
     std::stringstream header;
     header << "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='";
     header << streamHeader.getTo() << "' id='dummy' version='1.0'>";
 
     xmppLayer->handleDataRead(createSafeByteArray(header.str()));
-}
+  }
 
-void BOSHSessionStream::fakeStreamFooterReceipt(BOSHError::ref error) {
+  void BOSHSessionStream::fakeStreamFooterReceipt(BOSHError::ref error) {
     std::string footer("</stream:stream>");
     xmppLayer->handleDataRead(createSafeByteArray(footer));
     onClosed(error);
-}
+  }
 
-void BOSHSessionStream::handleXMPPLayerDataWritten(const SafeByteArray& data) {
+  void BOSHSessionStream::handleXMPPLayerDataWritten(const SafeByteArray& data) {
     eventLoop->postEvent(boost::bind(&BOSHConnectionPool::write, connectionPool, data), shared_from_this());
-}
+  }
 
-void BOSHSessionStream::handlePoolBOSHDataRead(const SafeByteArray& data) {
+  void BOSHSessionStream::handlePoolBOSHDataRead(const SafeByteArray& data) {
     onDataRead(data);
-}
+  }
 
-void BOSHSessionStream::handlePoolBOSHDataWritten(const SafeByteArray& data) {
+  void BOSHSessionStream::handlePoolBOSHDataWritten(const SafeByteArray& data) {
     onDataWritten(data);
-}
+  }
 
-}
+} // namespace Swift

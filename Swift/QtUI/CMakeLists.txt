@@ -172,19 +172,27 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5 REQUIRED COMPONENTS Core Gui X11Extras DBus Widgets WebKitWidgets Multimedia)
-find_package(Boost REQUIRED COMPONENTS program_options filesystem serialization)
+find_package(Qt5 REQUIRED COMPONENTS Core Gui X11Extras DBus Widgets WebKitWidgets Multimedia Svg)
+find_package(Boost REQUIRED COMPONENTS program_options filesystem serialization regex)
 
 
 add_executable(Swift ${SWIFT_SRCS})
 
 target_link_libraries(Swift Qt5::Core Qt5::Gui Qt5::DBus Qt5::X11Extras Qt5::Widgets Qt5::WebKitWidgets Qt5::Multimedia
+  swift_controllers
+  swift_tools
+  swiften
   Boost::filesystem
   Boost::program_options
   Boost::serialization
-  swiften
-  swift_controllers
-  swift_tools
+  Boost::regex
+  Boost::serialization
+  resolv
+  ssl
+  crypto
+  expat
+  idn
+  z
 )
 
 target_include_directories(Swift PRIVATE ../../ ../ QtVCardWidget/)
