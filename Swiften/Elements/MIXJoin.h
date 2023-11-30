@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <algorithm>
 
 #include <boost/optional.hpp>
 
@@ -18,60 +19,59 @@
 #include <Swiften/JID/JID.h>
 
 namespace Swift {
-    class SWIFTEN_API MIXJoin : public Payload {
+  class SWIFTEN_API MIXJoin : public Payload {
 
-        public:
-            using ref = std::shared_ptr<MIXJoin>;
+  public:
+    using ref = std::shared_ptr<MIXJoin>;
 
-        public:
+  public:
+    MIXJoin() {}
 
-            MIXJoin() {}
+    const boost::optional<JID>& getChannel() const {
+      return channel_;
+    }
 
-            const boost::optional<JID>& getChannel() const {
-                return channel_;
-            }
+    void setChannel(JID channel) {
+      channel_ = channel;
+    }
 
-            void setChannel(JID channel) {
-                channel_ = channel;
-            }
+    const boost::optional<JID>& getJID() const {
+      return jid_;
+    }
 
-            const boost::optional<JID>& getJID() const {
-                return jid_;
-            }
+    void setJID(JID jid) {
+      jid_ = jid;
+    }
 
-            void setJID(JID jid) {
-                jid_ = jid;
-            }
+    const std::unordered_set<std::string>& getSubscriptions() const {
+      return subscribeItems_;
+    }
 
-            const std::unordered_set<std::string>& getSubscriptions() const {
-                return subscribeItems_;
-            }
+    void setSubscriptions(std::unordered_set<std::string> values) {
+      subscribeItems_ = values;
+    }
 
-            void setSubscriptions(std::unordered_set<std::string> values) {
-                subscribeItems_ = values ;
-            }
+    void addSubscription(std::string value) {
+      subscribeItems_.insert(value);
+    }
 
-            void addSubscription(std::string value) {
-                subscribeItems_.insert(value);
-            }
+    bool hasSubscription(const std::string& value) const {
+      return std::find(subscribeItems_.begin(), subscribeItems_.end(), value) != subscribeItems_.end();
+    }
 
-            bool hasSubscription(const std::string& value) const {
-                return std::find(subscribeItems_.begin(), subscribeItems_.end(), value) != subscribeItems_.end();
-            }
+    void setForm(std::shared_ptr<Form> form) {
+      form_ = form;
+    }
 
-            void setForm(std::shared_ptr<Form> form) {
-                form_ = form;
-            }
+    const std::shared_ptr<Form>& getForm() const {
+      return form_;
+    }
 
-            const std::shared_ptr<Form>& getForm() const {
-                return form_;
-            }
-
-        private:
-            boost::optional<JID> jid_;
-            boost::optional<JID> channel_;
-            std::unordered_set<std::string> subscribeItems_;
-            std::shared_ptr<Form> form_;
-            // FIXME: MIXInvitation to be implemented. boost::optional<MIXInvitation> invitation_;
-    };
-}
+  private:
+    boost::optional<JID> jid_;
+    boost::optional<JID> channel_;
+    std::unordered_set<std::string> subscribeItems_;
+    std::shared_ptr<Form> form_;
+    // FIXME: MIXInvitation to be implemented. boost::optional<MIXInvitation> invitation_;
+  };
+} // namespace Swift

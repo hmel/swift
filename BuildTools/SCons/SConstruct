@@ -662,17 +662,22 @@ if env["PLATFORM"] == "darwin" :
         env["HAVE_IOKIT"] = True
     cocoa_conf.Finish()
 
+print("XXX FACE")
 # Qt
 try :
+    print("XXX FACE HAVE_QT = True");
     myenv = env.Clone()
     myenv.Tool("qt4", toolpath = ["#/BuildTools/SCons/Tools"])
+    print("XXX FACE HAVE_QT = True");
     env["HAVE_QT"] = True
 except SCons.Errors.StopError:
+    print("XXX FACE HAVE_QT = False");
     env["HAVE_QT"] = False
 except Exception as e:
     print("Info: %s" % str(e))
-    env["HAVE_QT"] = False
+    env["HAVE_QT"] = True
 
+print("XXX FACE")
 ################################################################################
 # DocBook setup
 ################################################################################
