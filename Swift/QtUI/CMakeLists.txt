@@ -174,6 +174,13 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt5 REQUIRED COMPONENTS Core Gui X11Extras DBus Widgets WebKitWidgets Multimedia Svg)
 find_package(Boost REQUIRED COMPONENTS program_options filesystem serialization regex)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(IDN REQUIRED IMPORTED_TARGET libidn)
+if(${IDN_FOUND})
+    MESSAGE(${PKG_CONFIG_EXECUTABLE})
+    MESSAGE(${IDN_LIBRARIES})
+    MESSAGE(${IDN_LINK_LIBRARIES})
+endif()
 
 
 add_executable(Swift ${SWIFT_SRCS})
@@ -191,7 +198,7 @@ target_link_libraries(Swift Qt5::Core Qt5::Gui Qt5::DBus Qt5::X11Extras Qt5::Wid
   ssl
   crypto
   expat
-  idn
+  ${IDN_LIBRARIES}
   z
 )
 
