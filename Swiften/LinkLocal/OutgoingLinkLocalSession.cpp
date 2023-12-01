@@ -6,7 +6,8 @@
 
 #include <Swiften/LinkLocal/OutgoingLinkLocalSession.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Elements/IQ.h>
 #include <Swiften/Elements/ProtocolHeader.h>
@@ -15,38 +16,30 @@
 
 namespace Swift {
 
-OutgoingLinkLocalSession::OutgoingLinkLocalSession(
-        const JID& localJID,
-        const JID& remoteJID,
-        std::shared_ptr<Connection> connection,
-        PayloadParserFactoryCollection* payloadParserFactories,
-        PayloadSerializerCollection* payloadSerializers,
-        XMLParserFactory* xmlParserFactory) :
-            Session(connection, payloadParserFactories, payloadSerializers, xmlParserFactory) {
+  OutgoingLinkLocalSession::OutgoingLinkLocalSession(const JID& localJID, const JID& remoteJID, std::shared_ptr<Connection> connection, PayloadParserFactoryCollection* payloadParserFactories, PayloadSerializerCollection* payloadSerializers, XMLParserFactory* xmlParserFactory) : Session(connection, payloadParserFactories, payloadSerializers, xmlParserFactory) {
     setLocalJID(localJID);
     setRemoteJID(remoteJID);
-}
+  }
 
-void OutgoingLinkLocalSession::handleSessionStarted() {
+  void OutgoingLinkLocalSession::handleSessionStarted() {
     ProtocolHeader header;
     header.setFrom(getLocalJID());
     getXMPPLayer()->writeHeader(header);
-}
+  }
 
-void OutgoingLinkLocalSession::handleStreamStart(const ProtocolHeader&) {
+  void OutgoingLinkLocalSession::handleStreamStart(const ProtocolHeader&) {
     for (const auto& stanza : queuedElements_) {
-        sendElement(stanza);
+      sendElement(stanza);
     }
     queuedElements_.clear();
-}
+  }
 
-void OutgoingLinkLocalSession::handleElement(std::shared_ptr<ToplevelElement> element) {
+  void OutgoingLinkLocalSession::handleElement(std::shared_ptr<ToplevelElement> element) {
     onElementReceived(element);
-}
+  }
 
-void OutgoingLinkLocalSession::queueElement(std::shared_ptr<ToplevelElement> element) {
+  void OutgoingLinkLocalSession::queueElement(std::shared_ptr<ToplevelElement> element) {
     queuedElements_.push_back(element);
-}
+  }
 
-
-}
+} // namespace Swift

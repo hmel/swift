@@ -6,7 +6,8 @@
 
 #include <Swiften/Component/ComponentConnector.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Network/ConnectionFactory.h>
 #include <Swiften/Network/DomainNameAddressQuery.h>
@@ -15,92 +16,90 @@
 
 namespace Swift {
 
-ComponentConnector::ComponentConnector(const std::string& hostname, unsigned short port, DomainNameResolver* resolver, ConnectionFactory* connectionFactory, TimerFactory* timerFactory) : hostname(hostname), port(port), resolver(resolver), connectionFactory(connectionFactory), timerFactory(timerFactory), timeoutMilliseconds(0) {
-}
+  ComponentConnector::ComponentConnector(const std::string& hostname, unsigned short port, DomainNameResolver* resolver, ConnectionFactory* connectionFactory, TimerFactory* timerFactory) : hostname(hostname), port(port), resolver(resolver), connectionFactory(connectionFactory), timerFactory(timerFactory), timeoutMilliseconds(0) {}
 
-void ComponentConnector::setTimeoutMilliseconds(int milliseconds) {
+  void ComponentConnector::setTimeoutMilliseconds(int milliseconds) {
     timeoutMilliseconds = milliseconds;
-}
+  }
 
-void ComponentConnector::start() {
+  void ComponentConnector::start() {
     assert(!currentConnection);
     assert(!timer);
     assert(!addressQuery);
     addressQuery = resolver->createAddressQuery(hostname);
     addressQuery->onResult.connect(boost::bind(&ComponentConnector::handleAddressQueryResult, shared_from_this(), _1, _2));
     if (timeoutMilliseconds > 0) {
-        timer = timerFactory->createTimer(timeoutMilliseconds);
-        timer->onTick.connect(boost::bind(&ComponentConnector::handleTimeout, shared_from_this()));
-        timer->start();
+      timer = timerFactory->createTimer(timeoutMilliseconds);
+      timer->onTick.connect(boost::bind(&ComponentConnector::handleTimeout, shared_from_this()));
+      timer->start();
     }
     addressQuery->run();
-}
+  }
 
-void ComponentConnector::stop() {
+  void ComponentConnector::stop() {
     finish(std::shared_ptr<Connection>());
-}
+  }
 
-
-void ComponentConnector::handleAddressQueryResult(const std::vector<HostAddress>& addresses, boost::optional<DomainNameResolveError> error) {
+  void ComponentConnector::handleAddressQueryResult(const std::vector<HostAddress>& addresses, boost::optional<DomainNameResolveError> error) {
     addressQuery.reset();
     if (error || addresses.empty()) {
-        finish(std::shared_ptr<Connection>());
+      finish(std::shared_ptr<Connection>());
     }
     else {
-        addressQueryResults = std::deque<HostAddress>(addresses.begin(), addresses.end());
-        tryNextAddress();
+      addressQueryResults = std::deque<HostAddress>(addresses.begin(), addresses.end());
+      tryNextAddress();
     }
-}
+  }
 
-void ComponentConnector::tryNextAddress() {
+  void ComponentConnector::tryNextAddress() {
     assert(!addressQueryResults.empty());
     HostAddress address = addressQueryResults.front();
     addressQueryResults.pop_front();
     tryConnect(HostAddressPort(address, port));
-}
+  }
 
-void ComponentConnector::tryConnect(const HostAddressPort& target) {
+  void ComponentConnector::tryConnect(const HostAddressPort& target) {
     assert(!currentConnection);
     currentConnection = connectionFactory->createConnection();
     currentConnection->onConnectFinished.connect(boost::bind(&ComponentConnector::handleConnectionConnectFinished, shared_from_this(), _1));
     currentConnection->connect(target);
-}
+  }
 
-void ComponentConnector::handleConnectionConnectFinished(bool error) {
+  void ComponentConnector::handleConnectionConnectFinished(bool error) {
     currentConnection->onConnectFinished.disconnect(boost::bind(&ComponentConnector::handleConnectionConnectFinished, shared_from_this(), _1));
     if (error) {
-        currentConnection.reset();
-        if (!addressQueryResults.empty()) {
-            tryNextAddress();
-        }
-        else {
-            finish(std::shared_ptr<Connection>());
-        }
+      currentConnection.reset();
+      if (!addressQueryResults.empty()) {
+        tryNextAddress();
+      }
+      else {
+        finish(std::shared_ptr<Connection>());
+      }
     }
     else {
-        finish(currentConnection);
+      finish(currentConnection);
     }
-}
+  }
 
-void ComponentConnector::finish(std::shared_ptr<Connection> connection) {
+  void ComponentConnector::finish(std::shared_ptr<Connection> connection) {
     if (timer) {
-        timer->stop();
-        timer->onTick.disconnect(boost::bind(&ComponentConnector::handleTimeout, shared_from_this()));
-        timer.reset();
+      timer->stop();
+      timer->onTick.disconnect(boost::bind(&ComponentConnector::handleTimeout, shared_from_this()));
+      timer.reset();
     }
     if (addressQuery) {
-        addressQuery->onResult.disconnect(boost::bind(&ComponentConnector::handleAddressQueryResult, shared_from_this(), _1, _2));
-        addressQuery.reset();
+      addressQuery->onResult.disconnect(boost::bind(&ComponentConnector::handleAddressQueryResult, shared_from_this(), _1, _2));
+      addressQuery.reset();
     }
     if (currentConnection) {
-        currentConnection->onConnectFinished.disconnect(boost::bind(&ComponentConnector::handleConnectionConnectFinished, shared_from_this(), _1));
-        currentConnection.reset();
+      currentConnection->onConnectFinished.disconnect(boost::bind(&ComponentConnector::handleConnectionConnectFinished, shared_from_this(), _1));
+      currentConnection.reset();
     }
     onConnectFinished(connection);
-}
+  }
 
-void ComponentConnector::handleTimeout() {
+  void ComponentConnector::handleTimeout() {
     finish(std::shared_ptr<Connection>());
-}
+  }
 
-}
+} // namespace Swift

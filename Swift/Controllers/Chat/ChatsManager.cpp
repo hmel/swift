@@ -4,13 +4,14 @@
  * See the COPYING file for more information.
  */
 
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+
 #include <Swift/Controllers/Chat/ChatsManager.h>
 
 #include <memory>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/bind/bind.hpp>
-using namespace boost::placeholders;
 
 #include <Swiften/Avatars/AvatarManager.h>
 #include <Swiften/Base/Log.h>

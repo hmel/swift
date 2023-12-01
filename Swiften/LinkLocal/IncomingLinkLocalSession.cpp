@@ -8,7 +8,8 @@
 
 #include <memory>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Elements/IQ.h>
 #include <Swiften/Elements/ProtocolHeader.h>
@@ -20,22 +21,15 @@
 
 namespace Swift {
 
-IncomingLinkLocalSession::IncomingLinkLocalSession(
-        const JID& localJID,
-        std::shared_ptr<Connection> connection,
-        PayloadParserFactoryCollection* payloadParserFactories,
-        PayloadSerializerCollection* payloadSerializers,
-        XMLParserFactory* xmlParserFactory) :
-            Session(connection, payloadParserFactories, payloadSerializers, xmlParserFactory),
-            initialized(false) {
+  IncomingLinkLocalSession::IncomingLinkLocalSession(const JID& localJID, std::shared_ptr<Connection> connection, PayloadParserFactoryCollection* payloadParserFactories, PayloadSerializerCollection* payloadSerializers, XMLParserFactory* xmlParserFactory) : Session(connection, payloadParserFactories, payloadSerializers, xmlParserFactory), initialized(false) {
     setLocalJID(localJID);
-}
+  }
 
-void IncomingLinkLocalSession::handleStreamStart(const ProtocolHeader& incomingHeader) {
+  void IncomingLinkLocalSession::handleStreamStart(const ProtocolHeader& incomingHeader) {
     setRemoteJID(JID(incomingHeader.getFrom()));
     if (!getRemoteJID().isValid()) {
-        finishSession();
-        return;
+      finishSession();
+      return;
     }
 
     ProtocolHeader header;
@@ -43,29 +37,27 @@ void IncomingLinkLocalSession::handleStreamStart(const ProtocolHeader& incomingH
     getXMPPLayer()->writeHeader(header);
 
     if (incomingHeader.getVersion() == "1.0") {
-        getXMPPLayer()->writeElement(std::make_shared<StreamFeatures>());
+      getXMPPLayer()->writeElement(std::make_shared<StreamFeatures>());
     }
     else {
-        setInitialized();
+      setInitialized();
     }
-}
+  }
 
-void IncomingLinkLocalSession::handleElement(std::shared_ptr<ToplevelElement> element) {
+  void IncomingLinkLocalSession::handleElement(std::shared_ptr<ToplevelElement> element) {
     std::shared_ptr<Stanza> stanza = std::dynamic_pointer_cast<Stanza>(element);
     // If we get our first stanza before streamfeatures, our session is implicitly
     // initialized
     if (stanza && !isInitialized()) {
-        setInitialized();
+      setInitialized();
     }
 
     onElementReceived(element);
-}
+  }
 
-void IncomingLinkLocalSession::setInitialized() {
+  void IncomingLinkLocalSession::setInitialized() {
     initialized = true;
     onSessionStarted();
-}
+  }
 
-
-
-}
+} // namespace Swift

@@ -6,7 +6,8 @@
 
 #include <Swiften/LinkLocal/LinkLocalConnector.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/LinkLocal/DNSSD/DNSSDQuerier.h>
 #include <Swiften/LinkLocal/DNSSD/DNSSDResolveHostnameQuery.h>
@@ -17,63 +18,49 @@
 
 namespace Swift {
 
-LinkLocalConnector::LinkLocalConnector(
-        const LinkLocalService& service,
-        std::shared_ptr<DNSSDQuerier> querier,
-        std::shared_ptr<Connection> connection) :
-            service(service),
-            querier(querier),
-            connection(connection) {
-}
+  LinkLocalConnector::LinkLocalConnector(const LinkLocalService& service, std::shared_ptr<DNSSDQuerier> querier, std::shared_ptr<Connection> connection) : service(service), querier(querier), connection(connection) {}
 
-LinkLocalConnector::~LinkLocalConnector() {
+  LinkLocalConnector::~LinkLocalConnector() {
     assert(!resolveQuery);
-}
+  }
 
-void LinkLocalConnector::connect() {
-    resolveQuery = querier->createResolveHostnameQuery(
-            service.getHostname(),
-            service.getID().getNetworkInterfaceID());
-    resolveQueryHostNameResolvedConnection = resolveQuery->onHostnameResolved.connect(boost::bind(
-            &LinkLocalConnector::handleHostnameResolved,
-            std::dynamic_pointer_cast<LinkLocalConnector>(shared_from_this()),
-            _1));
+  void LinkLocalConnector::connect() {
+    resolveQuery = querier->createResolveHostnameQuery(service.getHostname(), service.getID().getNetworkInterfaceID());
+    resolveQueryHostNameResolvedConnection = resolveQuery->onHostnameResolved.connect(boost::bind(&LinkLocalConnector::handleHostnameResolved, std::dynamic_pointer_cast<LinkLocalConnector>(shared_from_this()), _1));
     resolveQuery->run();
-}
+  }
 
-void LinkLocalConnector::cancel() {
+  void LinkLocalConnector::cancel() {
     if (resolveQuery) {
-        resolveQuery->finish();
-        resolveQueryHostNameResolvedConnection.disconnect();
-        resolveQuery.reset();
+      resolveQuery->finish();
+      resolveQueryHostNameResolvedConnection.disconnect();
+      resolveQuery.reset();
     }
     connectionConnectFinishedConnection.disconnect();
     connection->disconnect();
-}
+  }
 
-void LinkLocalConnector::handleHostnameResolved(const boost::optional<HostAddress>& address) {
+  void LinkLocalConnector::handleHostnameResolved(const boost::optional<HostAddress>& address) {
     resolveQuery->finish();
     resolveQueryHostNameResolvedConnection.disconnect();
     resolveQuery.reset();
     if (address) {
-        connectionConnectFinishedConnection = connection->onConnectFinished.connect(
-                boost::bind(&LinkLocalConnector::handleConnected, shared_from_this(), _1));
-        connection->connect(HostAddressPort(*address, service.getPort()));
+      connectionConnectFinishedConnection = connection->onConnectFinished.connect(boost::bind(&LinkLocalConnector::handleConnected, shared_from_this(), _1));
+      connection->connect(HostAddressPort(*address, service.getPort()));
     }
     else {
-        onConnectFinished(true);
+      onConnectFinished(true);
     }
-}
+  }
 
-void LinkLocalConnector::handleConnected(bool error) {
+  void LinkLocalConnector::handleConnected(bool error) {
     onConnectFinished(error);
     assert(connectionConnectFinishedConnection.connected());
     connectionConnectFinishedConnection.disconnect();
-}
+  }
 
-void LinkLocalConnector::queueElement(std::shared_ptr<ToplevelElement> element) {
+  void LinkLocalConnector::queueElement(std::shared_ptr<ToplevelElement> element) {
     queuedElements.push_back(element);
-}
+  }
 
-
-}
+} // namespace Swift

@@ -12,14 +12,15 @@
 #include <iostream>
 #include <sstream>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Base/Path.h>
 #include <Swiften/Network/ConnectionFactory.h>
 
 namespace Swift {
 
-GNTPNotifier::GNTPNotifier(const std::string& name, const boost::filesystem::path& icon, ConnectionFactory* connectionFactory) : name(name), icon(icon), connectionFactory(connectionFactory), initialized(false), registered(false) {
+  GNTPNotifier::GNTPNotifier(const std::string& name, const boost::filesystem::path& icon, ConnectionFactory* connectionFactory) : name(name), icon(icon), connectionFactory(connectionFactory), initialized(false), registered(false) {
     // Registration message
     std::ostringstream message;
     message << "GNTP/1.0 REGISTER NONE\r\n";
@@ -29,58 +30,57 @@ GNTPNotifier::GNTPNotifier(const std::string& name, const boost::filesystem::pat
     std::vector<Notifier::Type> defaultTypes = getDefaultTypes();
     std::vector<Notifier::Type> allTypes = getAllTypes();
     for (const auto& type : allTypes) {
-        message << "\r\n";
-        message << "Notification-Name: " << typeToString(type) << "\r\n";
-        message << "Notification-Enabled: " << (std::find(defaultTypes.begin(), defaultTypes.end(), type) == defaultTypes.end() ? "false" : "true") << "\r\n";
+      message << "\r\n";
+      message << "Notification-Name: " << typeToString(type) << "\r\n";
+      message << "Notification-Enabled: " << (std::find(defaultTypes.begin(), defaultTypes.end(), type) == defaultTypes.end() ? "false" : "true") << "\r\n";
     }
     message << "\r\n";
 
     send(message.str());
-}
+  }
 
-GNTPNotifier::~GNTPNotifier() {
-}
+  GNTPNotifier::~GNTPNotifier() {}
 
-void GNTPNotifier::send(const std::string& message) {
+  void GNTPNotifier::send(const std::string& message) {
     if (currentConnection) {
-        return;
+      return;
     }
     currentMessage = message;
     currentConnection = connectionFactory->createConnection();
     currentConnection->onConnectFinished.connect(boost::bind(&GNTPNotifier::handleConnectFinished, this, _1));
     currentConnection->onDataRead.connect(boost::bind(&GNTPNotifier::handleDataRead, this, _1));
     currentConnection->connect(HostAddressPort(HostAddress("127.0.0.1"), 23053));
-}
+  }
 
-void GNTPNotifier::showMessage(Type type, const std::string& subject, const std::string& description, const boost::filesystem::path& picture, boost::function<void()>) {
+  void GNTPNotifier::showMessage(Type type, const std::string& subject, const std::string& description, const boost::filesystem::path& picture, boost::function<void()>) {
     if (registered) {
-        std::ostringstream message;
-        message << "GNTP/1.0 NOTIFY NONE\r\n";
-        message << "Application-Name: " << name << "\r\n";
-        message << "Notification-Name: " << typeToString(type) << "\r\n";
-        message << "Notification-Title: " << subject << "\r\n";
-        message << "Notification-Text: " << description << "\r\n";
-        message << "Notification-Icon: " << pathToString(picture) << "\r\n";
-        message << "\r\n";
-        send(message.str());
+      std::ostringstream message;
+      message << "GNTP/1.0 NOTIFY NONE\r\n";
+      message << "Application-Name: " << name << "\r\n";
+      message << "Notification-Name: " << typeToString(type) << "\r\n";
+      message << "Notification-Title: " << subject << "\r\n";
+      message << "Notification-Text: " << description << "\r\n";
+      message << "Notification-Icon: " << pathToString(picture) << "\r\n";
+      message << "\r\n";
+      send(message.str());
     }
-}
+  }
 
-void GNTPNotifier::handleConnectFinished(bool error) {
+  void GNTPNotifier::handleConnectFinished(bool error) {
     if (!initialized) {
-        initialized = true;
-        registered = !error;
+      initialized = true;
+      registered = !error;
     }
 
     if (!error) {
-        currentConnection->write(currentMessage.c_str());
+      currentConnection->write(currentMessage.c_str());
     }
-}
+  }
 
-void GNTPNotifier::handleDataRead(const ByteArray&) {
+  void GNTPNotifier::handleDataRead(const ByteArray&) {
     currentConnection->onDataRead.disconnect(boost::bind(&GNTPNotifier::handleDataRead, this, _1));
     currentConnection->onConnectFinished.disconnect(boost::bind(&GNTPNotifier::handleConnectFinished, this, _1));
     currentConnection.reset();
-}
+  }
 
-}
+} // namespace Swift

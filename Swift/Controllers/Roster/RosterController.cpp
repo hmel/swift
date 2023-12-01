@@ -4,12 +4,12 @@
  * See the COPYING file for more information.
  */
 
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+
 #include <Swift/Controllers/Roster/RosterController.h>
 
 #include <memory>
-
-#include <boost/bind/bind.hpp>
-using namespace boost::placeholders;
 
 #include <Swiften/Avatars/AvatarManager.h>
 #include <Swiften/Base/Path.h>
