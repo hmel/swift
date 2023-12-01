@@ -12,40 +12,41 @@
 
 #include <Swift/Controllers/FileTransferListController.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swift/Controllers/UIEvents/RequestFileTransferListUIEvent.h>
 #include <Swift/Controllers/UIInterfaces/FileTransferListWidgetFactory.h>
 
 namespace Swift {
 
-FileTransferListController::FileTransferListController(UIEventStream* uiEventStream, FileTransferListWidgetFactory* fileTransferListWidgetFactory) : fileTransferListWidgetFactory(fileTransferListWidgetFactory), fileTransferListWidget(nullptr), fileTransferOverview(nullptr) {
+  FileTransferListController::FileTransferListController(UIEventStream* uiEventStream, FileTransferListWidgetFactory* fileTransferListWidgetFactory) : fileTransferListWidgetFactory(fileTransferListWidgetFactory), fileTransferListWidget(nullptr), fileTransferOverview(nullptr) {
     uiEventStream->onUIEvent.connect(boost::bind(&FileTransferListController::handleUIEvent, this, _1));
-}
+  }
 
-FileTransferListController::~FileTransferListController() {
+  FileTransferListController::~FileTransferListController() {
     delete fileTransferListWidget;
-}
+  }
 
-void FileTransferListController::setFileTransferOverview(FileTransferOverview *overview) {
+  void FileTransferListController::setFileTransferOverview(FileTransferOverview* overview) {
     fileTransferOverview = overview;
     if (fileTransferListWidget) {
-        fileTransferListWidget->setFileTransferOverview(fileTransferOverview);
+      fileTransferListWidget->setFileTransferOverview(fileTransferOverview);
     }
-}
+  }
 
-void FileTransferListController::handleUIEvent(std::shared_ptr<UIEvent> rawEvent) {
+  void FileTransferListController::handleUIEvent(std::shared_ptr<UIEvent> rawEvent) {
     std::shared_ptr<RequestFileTransferListUIEvent> event = std::dynamic_pointer_cast<RequestFileTransferListUIEvent>(rawEvent);
     if (event != nullptr) {
-        if (fileTransferListWidget == nullptr) {
-            fileTransferListWidget = fileTransferListWidgetFactory->createFileTransferListWidget();
-            if (fileTransferOverview) {
-                fileTransferListWidget->setFileTransferOverview(fileTransferOverview);
-            }
+      if (fileTransferListWidget == nullptr) {
+        fileTransferListWidget = fileTransferListWidgetFactory->createFileTransferListWidget();
+        if (fileTransferOverview) {
+          fileTransferListWidget->setFileTransferOverview(fileTransferOverview);
         }
-        fileTransferListWidget->show();
-        fileTransferListWidget->activate();
+      }
+      fileTransferListWidget->show();
+      fileTransferListWidget->activate();
     }
-}
+  }
 
-}
+} // namespace Swift

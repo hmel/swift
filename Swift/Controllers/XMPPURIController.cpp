@@ -8,7 +8,8 @@
 
 #include <memory>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swift/Controllers/UIEvents/RequestChatUIEvent.h>
 #include <Swift/Controllers/UIEvents/RequestJoinMUCUIEvent.h>
@@ -20,21 +21,21 @@
 using namespace Swift;
 
 XMPPURIController::XMPPURIController(URIHandler* uriHandler, UIEventStream* uiEventStream) : uriHandler(uriHandler), uiEventStream(uiEventStream) {
-    uriHandler->onURI.connect(boost::bind(&XMPPURIController::handleURI, this, _1));
+  uriHandler->onURI.connect(boost::bind(&XMPPURIController::handleURI, this, _1));
 }
 
 XMPPURIController::~XMPPURIController() {
-    uriHandler->onURI.disconnect(boost::bind(&XMPPURIController::handleURI, this, _1));
+  uriHandler->onURI.disconnect(boost::bind(&XMPPURIController::handleURI, this, _1));
 }
 
 void XMPPURIController::handleURI(const std::string& s) {
-    XMPPURI uri = XMPPURI::fromString(s);
-    if (!uri.isNull()) {
-        if (uri.getQueryType() == "join") {
-            uiEventStream->send(std::make_shared<RequestJoinMUCUIEvent>(uri.getPath()));
-        }
-        else {
-            uiEventStream->send(std::make_shared<RequestChatUIEvent>(uri.getPath()));
-        }
+  XMPPURI uri = XMPPURI::fromString(s);
+  if (!uri.isNull()) {
+    if (uri.getQueryType() == "join") {
+      uiEventStream->send(std::make_shared<RequestJoinMUCUIEvent>(uri.getPath()));
     }
+    else {
+      uiEventStream->send(std::make_shared<RequestChatUIEvent>(uri.getPath()));
+    }
+  }
 }

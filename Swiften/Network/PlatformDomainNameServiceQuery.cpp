@@ -25,7 +25,7 @@
 #include <arpa/nameser_compat.h>
 #include <resolv.h>
 #endif
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <Swiften/Base/ByteArray.h>

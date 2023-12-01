@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 namespace Swift {

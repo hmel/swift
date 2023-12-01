@@ -6,7 +6,8 @@
 
 #include <Swiften/StreamStack/StreamStack.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/StreamStack/HighLayer.h>
 #include <Swiften/StreamStack/LowLayer.h>
@@ -14,15 +15,14 @@
 
 namespace Swift {
 
-StreamStack::StreamStack(std::unique_ptr<HighLayer> topLayer, std::unique_ptr<LowLayer> bottomLayer) : topLayer_(std::move(topLayer)), bottomLayer_(std::move(bottomLayer)) {
+  StreamStack::StreamStack(std::unique_ptr<HighLayer> topLayer, std::unique_ptr<LowLayer> bottomLayer) : topLayer_(std::move(topLayer)), bottomLayer_(std::move(bottomLayer)) {
     bottomLayer_->setParentLayer(topLayer_.get());
     topLayer_->setChildLayer(bottomLayer_.get());
-}
+  }
 
-StreamStack::~StreamStack() {
-}
+  StreamStack::~StreamStack() {}
 
-void StreamStack::addLayer(std::unique_ptr<StreamLayer> streamLayer) {
+  void StreamStack::addLayer(std::unique_ptr<StreamLayer> streamLayer) {
     auto* lowLayer = layers_.empty() ? bottomLayer_.get() : layers_.rbegin()->get();
 
     topLayer_->setChildLayer(streamLayer.get());
@@ -32,6 +32,6 @@ void StreamStack::addLayer(std::unique_ptr<StreamLayer> streamLayer) {
     streamLayer->setChildLayer(lowLayer);
 
     layers_.emplace_back(std::move(streamLayer));
-}
+  }
 
-}
+} // namespace Swift

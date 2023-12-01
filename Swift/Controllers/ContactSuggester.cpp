@@ -18,7 +18,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/find.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Base/Algorithm.h>
 #include <Swiften/JID/JID.h>
@@ -27,57 +28,53 @@
 
 namespace Swift {
 
-ContactSuggester::ContactSuggester() {
-}
+  ContactSuggester::ContactSuggester() {}
 
-ContactSuggester::~ContactSuggester() {
-}
+  ContactSuggester::~ContactSuggester() {}
 
-void ContactSuggester::addContactProvider(ContactProvider* provider) {
+  void ContactSuggester::addContactProvider(ContactProvider* provider) {
     contactProviders_.push_back(provider);
-}
+  }
 
-bool ContactSuggester::matchContact(const std::string& search, const Contact::ref& c) {
+  bool ContactSuggester::matchContact(const std::string& search, const Contact::ref& c) {
     if (fuzzyMatch(c->name, search)) {
-        return true;
+      return true;
     }
     else if (c->jid.isValid()) {
-        return fuzzyMatch(c->jid.toString(), search);
+      return fuzzyMatch(c->jid.toString(), search);
     }
     return false;
-}
+  }
 
-std::vector<Contact::ref> ContactSuggester::getSuggestions(const std::string& search, bool withMUCNicks) const {
+  std::vector<Contact::ref> ContactSuggester::getSuggestions(const std::string& search, bool withMUCNicks) const {
     std::vector<Contact::ref> results;
 
     for (auto provider : contactProviders_) {
-        append(results, provider->getContacts(withMUCNicks));
+      append(results, provider->getContacts(withMUCNicks));
     }
 
     std::sort(results.begin(), results.end(), Contact::lexicographicalSortPredicate);
     results.erase(std::unique(results.begin(), results.end(), Contact::equalityPredicate), results.end());
-    results.erase(std::remove_if(results.begin(), results.end(), [&](const Contact::ref contact) {
-        return !matchContact(search, contact);
-    }), results.end());
+    results.erase(std::remove_if(results.begin(), results.end(), [&](const Contact::ref contact) { return !matchContact(search, contact); }), results.end());
     std::sort(results.begin(), results.end(), boost::bind(&Contact::sortPredicate, _1, _2, search));
 
     return results;
-}
+  }
 
-bool ContactSuggester::fuzzyMatch(std::string text, std::string match) {
+  bool ContactSuggester::fuzzyMatch(std::string text, std::string match) {
     std::string lowerText = text;
     boost::algorithm::to_lower(lowerText);
     std::string lowerMatch = match;
     boost::algorithm::to_lower(lowerMatch);
     size_t lastMatch = 0;
     for (char i : lowerMatch) {
-        size_t where = lowerText.find_first_of(i, lastMatch);
-        if (where == std::string::npos) {
-            return false;
-        }
-        lastMatch = where + 1;
+      size_t where = lowerText.find_first_of(i, lastMatch);
+      if (where == std::string::npos) {
+        return false;
+      }
+      lastMatch = where + 1;
     }
     return true;
-}
+  }
 
-}
+} // namespace Swift

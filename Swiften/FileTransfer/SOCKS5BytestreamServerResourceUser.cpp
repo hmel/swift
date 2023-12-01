@@ -6,7 +6,7 @@
 
 #include <Swiften/FileTransfer/SOCKS5BytestreamServerResourceUser.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <Swiften/FileTransfer/SOCKS5BytestreamServerManager.h>

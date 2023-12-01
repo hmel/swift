@@ -6,7 +6,8 @@
 
 #include <Swiften/Avatars/VCardUpdateAvatarManager.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Avatars/AvatarStorage.h>
 #include <Swiften/Base/Log.h>
@@ -20,59 +21,59 @@
 
 namespace Swift {
 
-VCardUpdateAvatarManager::VCardUpdateAvatarManager(VCardManager* vcardManager, StanzaChannel* stanzaChannel, AvatarStorage* avatarStorage, CryptoProvider* crypto, MUCRegistry* mucRegistry) : vcardManager_(vcardManager), avatarStorage_(avatarStorage), crypto_(crypto), mucRegistry_(mucRegistry) {
+  VCardUpdateAvatarManager::VCardUpdateAvatarManager(VCardManager* vcardManager, StanzaChannel* stanzaChannel, AvatarStorage* avatarStorage, CryptoProvider* crypto, MUCRegistry* mucRegistry) : vcardManager_(vcardManager), avatarStorage_(avatarStorage), crypto_(crypto), mucRegistry_(mucRegistry) {
     stanzaChannel->onPresenceReceived.connect(boost::bind(&VCardUpdateAvatarManager::handlePresenceReceived, this, _1));
     stanzaChannel->onAvailableChanged.connect(boost::bind(&VCardUpdateAvatarManager::handleStanzaChannelAvailableChanged, this, _1));
     vcardManager_->onVCardChanged.connect(boost::bind(&VCardUpdateAvatarManager::handleVCardChanged, this, _1, _2));
-}
+  }
 
-void VCardUpdateAvatarManager::handlePresenceReceived(std::shared_ptr<Presence> presence) {
+  void VCardUpdateAvatarManager::handlePresenceReceived(std::shared_ptr<Presence> presence) {
     std::shared_ptr<VCardUpdate> update = presence->getPayload<VCardUpdate>();
     if (!update || presence->getPayload<ErrorPayload>()) {
-        return;
+      return;
     }
     JID from = getAvatarJID(presence->getFrom());
     if (update->getPhotoHash().size() != 40) {
-        SWIFT_LOG(debug) << "Invalid vCard avatar photo hash length. Must be hex-encoded SHA-1, i.e. 40 characters.";
-        return;
+      SWIFT_LOG(debug) << "Invalid vCard avatar photo hash length. Must be hex-encoded SHA-1, i.e. 40 characters.";
+      return;
     }
     if (getAvatarHash(from) == update->getPhotoHash()) {
-        return;
+      return;
     }
     SWIFT_LOG(debug) << "Updated hash: " << from << " -> " << update->getPhotoHash();
     if (avatarStorage_->hasAvatar(update->getPhotoHash())) {
-        setAvatarHash(from, update->getPhotoHash());
+      setAvatarHash(from, update->getPhotoHash());
     }
     else {
-        vcardManager_->requestVCard(from);
+      vcardManager_->requestVCard(from);
     }
-}
+  }
 
-void VCardUpdateAvatarManager::handleVCardChanged(const JID& from, VCard::ref vCard) {
+  void VCardUpdateAvatarManager::handleVCardChanged(const JID& from, VCard::ref vCard) {
     if (!vCard) {
-        SWIFT_LOG(debug) << "Missing element: " << from << ": null vcard payload";
-        return;
+      SWIFT_LOG(debug) << "Missing element: " << from << ": null vcard payload";
+      return;
     }
 
     if (vCard->getPhoto().empty()) {
-        setAvatarHash(from, "");
+      setAvatarHash(from, "");
     }
     else {
-        std::string hash = Hexify::hexify(crypto_->getSHA1Hash(vCard->getPhoto()));
-        if (!avatarStorage_->hasAvatar(hash)) {
-            avatarStorage_->addAvatar(hash, vCard->getPhoto());
-        }
-        setAvatarHash(from, hash);
+      std::string hash = Hexify::hexify(crypto_->getSHA1Hash(vCard->getPhoto()));
+      if (!avatarStorage_->hasAvatar(hash)) {
+        avatarStorage_->addAvatar(hash, vCard->getPhoto());
+      }
+      setAvatarHash(from, hash);
     }
-}
+  }
 
-void VCardUpdateAvatarManager::setAvatarHash(const JID& from, const std::string& hash) {
+  void VCardUpdateAvatarManager::setAvatarHash(const JID& from, const std::string& hash) {
     SWIFT_LOG(debug) << "Updating hash: " << from << " -> " << hash;
     avatarHashes_[from] = hash;
     onAvatarChanged(from);
-}
+  }
 
-/*
+  /*
 void VCardUpdateAvatarManager::setAvatar(const JID& jid, const ByteArray& avatar) {
     std::string hash = Hexify::hexify(SHA1::getHash(avatar));
     avatarStorage_->addAvatar(hash, avatar);
@@ -80,30 +81,29 @@ void VCardUpdateAvatarManager::setAvatar(const JID& jid, const ByteArray& avatar
 }
 */
 
-boost::optional<std::string> VCardUpdateAvatarManager::getAvatarHash(const JID& jid) const {
+  boost::optional<std::string> VCardUpdateAvatarManager::getAvatarHash(const JID& jid) const {
     std::map<JID, std::string>::const_iterator i = avatarHashes_.find(getAvatarJID(jid));
     if (i != avatarHashes_.end()) {
-        return i->second;
+      return i->second;
     }
     else {
-        return boost::optional<std::string>();
+      return boost::optional<std::string>();
     }
-}
+  }
 
-JID VCardUpdateAvatarManager::getAvatarJID(const JID& jid) const {
+  JID VCardUpdateAvatarManager::getAvatarJID(const JID& jid) const {
     JID bareFrom = jid.toBare();
     return (mucRegistry_ && mucRegistry_->isMUC(bareFrom)) ? jid : bareFrom;
-}
+  }
 
-void VCardUpdateAvatarManager::handleStanzaChannelAvailableChanged(bool available) {
+  void VCardUpdateAvatarManager::handleStanzaChannelAvailableChanged(bool available) {
     if (available) {
-        std::map<JID, std::string> oldAvatarHashes;
-        avatarHashes_.swap(oldAvatarHashes);
-        for(std::map<JID, std::string>::const_iterator i = oldAvatarHashes.begin(); i != oldAvatarHashes.end(); ++i) {
-            onAvatarChanged(i->first);
-        }
+      std::map<JID, std::string> oldAvatarHashes;
+      avatarHashes_.swap(oldAvatarHashes);
+      for (std::map<JID, std::string>::const_iterator i = oldAvatarHashes.begin(); i != oldAvatarHashes.end(); ++i) {
+        onAvatarChanged(i->first);
+      }
     }
-}
+  }
 
-
-}
+} // namespace Swift

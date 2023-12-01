@@ -8,7 +8,7 @@
 
 #include <boost/asio/ip/v6_only.hpp>
 #include <boost/asio/placeholders.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <boost/numeric/conversion/cast.hpp>

@@ -6,7 +6,8 @@
 
 #include <Swiften/StreamStack/WhitespacePingLayer.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Base/Log.h>
 #include <Swiften/Network/Timer.h>
@@ -14,43 +15,43 @@
 
 namespace Swift {
 
-static const int TIMEOUT_MILLISECONDS = 60000;
+  static const int TIMEOUT_MILLISECONDS = 60000;
 
-WhitespacePingLayer::WhitespacePingLayer(TimerFactory* timerFactory) : isActive(false) {
+  WhitespacePingLayer::WhitespacePingLayer(TimerFactory* timerFactory) : isActive(false) {
     timer = timerFactory->createTimer(TIMEOUT_MILLISECONDS);
     timer->onTick.connect(boost::bind(&WhitespacePingLayer::handleTimerTick, this));
-}
+  }
 
-WhitespacePingLayer::~WhitespacePingLayer() {
+  WhitespacePingLayer::~WhitespacePingLayer() {
     SWIFT_LOG_ASSERT(!isActive, debug) << "WhitespacePingLayer still active at destruction.";
     if (isActive) {
-        timer->stop();
+      timer->stop();
     }
     timer->onTick.disconnect(boost::bind(&WhitespacePingLayer::handleTimerTick, this));
-}
+  }
 
-void WhitespacePingLayer::writeData(const SafeByteArray& data) {
+  void WhitespacePingLayer::writeData(const SafeByteArray& data) {
     writeDataToChildLayer(data);
-}
+  }
 
-void WhitespacePingLayer::handleDataRead(const SafeByteArray& data) {
+  void WhitespacePingLayer::handleDataRead(const SafeByteArray& data) {
     writeDataToParentLayer(data);
-}
+  }
 
-void WhitespacePingLayer::handleTimerTick() {
+  void WhitespacePingLayer::handleTimerTick() {
     timer->stop();
     writeDataToChildLayer(createSafeByteArray(" "));
     timer->start();
-}
+  }
 
-void WhitespacePingLayer::setActive() {
+  void WhitespacePingLayer::setActive() {
     isActive = true;
     timer->start();
-}
+  }
 
-void WhitespacePingLayer::setInactive() {
+  void WhitespacePingLayer::setInactive() {
     timer->stop();
     isActive = false;
-}
+  }
 
-}
+} // namespace Swift

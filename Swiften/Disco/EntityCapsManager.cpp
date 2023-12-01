@@ -6,7 +6,7 @@
 
 #include <Swiften/Disco/EntityCapsManager.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <Swiften/Client/StanzaChannel.h>

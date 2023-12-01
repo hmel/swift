@@ -8,31 +8,28 @@
 
 #include <algorithm>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Serializer/PayloadSerializer.h>
 
 namespace Swift {
 
-PayloadSerializerCollection::PayloadSerializerCollection() {
-}
+  PayloadSerializerCollection::PayloadSerializerCollection() {}
 
-PayloadSerializerCollection::~PayloadSerializerCollection() {
-}
+  PayloadSerializerCollection::~PayloadSerializerCollection() {}
 
-void PayloadSerializerCollection::addSerializer(PayloadSerializer* serializer) {
+  void PayloadSerializerCollection::addSerializer(PayloadSerializer* serializer) {
     serializers_.push_back(serializer);
-}
+  }
 
-void PayloadSerializerCollection::removeSerializer(PayloadSerializer* serializer) {
+  void PayloadSerializerCollection::removeSerializer(PayloadSerializer* serializer) {
     serializers_.erase(std::remove(serializers_.begin(), serializers_.end(), serializer), serializers_.end());
-}
+  }
 
-PayloadSerializer* PayloadSerializerCollection::getPayloadSerializer(std::shared_ptr<Payload> payload) const {
-    std::vector<PayloadSerializer*>::const_iterator i = std::find_if(
-            serializers_.begin(), serializers_.end(),
-            boost::bind(&PayloadSerializer::canSerialize, _1, payload));
+  PayloadSerializer* PayloadSerializerCollection::getPayloadSerializer(std::shared_ptr<Payload> payload) const {
+    std::vector<PayloadSerializer*>::const_iterator i = std::find_if(serializers_.begin(), serializers_.end(), boost::bind(&PayloadSerializer::canSerialize, _1, payload));
     return (i != serializers_.end() ? *i : nullptr);
-}
+  }
 
-}
+} // namespace Swift

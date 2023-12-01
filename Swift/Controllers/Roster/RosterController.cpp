@@ -8,7 +8,8 @@
 
 #include <memory>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Avatars/AvatarManager.h>
 #include <Swiften/Base/Path.h>
@@ -59,10 +60,10 @@
 
 namespace Swift {
 
-/**
+  /**
  * The controller does not gain ownership of these parameters.
  */
-RosterController::RosterController(const JID& jid, XMPPRoster* xmppRoster, AvatarManager* avatarManager, MainWindowFactory* mainWindowFactory, NickManager* nickManager, NickResolver* nickResolver, PresenceOracle* presenceOracle, SubscriptionManager* subscriptionManager, EventController* eventController, UIEventStream* uiEventStream, IQRouter* iqRouter, SettingsProvider* settings, EntityCapsProvider* entityCapsManager, ClientBlockListManager* clientBlockListManager, VCardManager* vcardManager, Chattables& chattables)
+  RosterController::RosterController(const JID& jid, XMPPRoster* xmppRoster, AvatarManager* avatarManager, MainWindowFactory* mainWindowFactory, NickManager* nickManager, NickResolver* nickResolver, PresenceOracle* presenceOracle, SubscriptionManager* subscriptionManager, EventController* eventController, UIEventStream* uiEventStream, IQRouter* iqRouter, SettingsProvider* settings, EntityCapsProvider* entityCapsManager, ClientBlockListManager* clientBlockListManager, VCardManager* vcardManager, Chattables& chattables)
     : myJID_(jid), xmppRoster_(xmppRoster), mainWindowFactory_(mainWindowFactory), mainWindow_(mainWindowFactory_->createMainWindow(chattables, uiEventStream)), roster_(new Roster()), offlineFilter_(new OfflineRosterFilter()), vcardManager_(vcardManager), avatarManager_(avatarManager), nickManager_(nickManager), nickResolver_(nickResolver), presenceOracle_(presenceOracle), uiEventStream_(uiEventStream), entityCapsManager_(entityCapsManager), clientBlockListManager_(clientBlockListManager), chattables_(chattables) {
     iqRouter_ = iqRouter;
     subscriptionManager_ = subscriptionManager;
@@ -104,10 +105,9 @@ RosterController::RosterController(const JID& jid, XMPPRoster* xmppRoster, Avata
     ownContact_->setVCard(vcardManager_->getVCard(myJID_.toBare()));
     ownContact_->setAvatarPath(pathToString(avatarManager_->getAvatarPath(myJID_.toBare())));
     mainWindow_->setMyContactRosterItem(ownContact_);
-}
+  }
 
-
-RosterController::~RosterController() {
+  RosterController::~RosterController() {
     settings_->onSettingChanged.disconnect(boost::bind(&RosterController::handleSettingChanged, this, _1));
     nickManager_->onOwnNickChanged.disconnect(boost::bind(&MainWindow::setMyNick, mainWindow_, _1));
 
@@ -116,40 +116,41 @@ RosterController::~RosterController() {
 
     mainWindow_->setRosterModel(nullptr);
     if (mainWindow_->canDelete()) {
-        delete mainWindow_;
+      delete mainWindow_;
     }
     delete rosterVCardProvider_;
     delete roster_;
-}
+  }
 
-void RosterController::setEnabled(bool enabled) {
+  void RosterController::setEnabled(bool enabled) {
     if (!enabled) {
-        roster_->applyOnItems(AppearOffline());
+      roster_->applyOnItems(AppearOffline());
     }
-}
+  }
 
-void RosterController::handleShowOfflineToggled(bool state) {
+  void RosterController::handleShowOfflineToggled(bool state) {
     if (state) {
-        roster_->removeFilter(offlineFilter_);
-    } else {
-        roster_->addFilter(offlineFilter_);
+      roster_->removeFilter(offlineFilter_);
     }
-}
+    else {
+      roster_->addFilter(offlineFilter_);
+    }
+  }
 
-void RosterController::handleChangeStatusRequest(StatusShow::Type show, const std::string &statusText) {
+  void RosterController::handleChangeStatusRequest(StatusShow::Type show, const std::string& statusText) {
     onChangeStatusRequest(show, statusText);
-}
+  }
 
-void RosterController::handleOnJIDAdded(const JID& jid) {
+  void RosterController::handleOnJIDAdded(const JID& jid) {
     std::vector<std::string> groups = xmppRoster_->getGroupsForJID(jid);
     std::string name = nickResolver_->jidToNick(jid);
     if (!groups.empty()) {
-        for (const auto& group : groups) {
-            roster_->addContact(jid, jid, name, group, avatarManager_->getAvatarPath(jid));
-        }
+      for (const auto& group : groups) {
+        roster_->addContact(jid, jid, name, group, avatarManager_->getAvatarPath(jid));
+      }
     }
     else {
-        roster_->addContact(jid, jid, name, QT_TRANSLATE_NOOP("", "Contacts"), avatarManager_->getAvatarPath(jid));
+      roster_->addContact(jid, jid, name, QT_TRANSLATE_NOOP("", "Contacts"), avatarManager_->getAvatarPath(jid));
     }
     applyAllPresenceTo(jid);
 
@@ -157,132 +158,131 @@ void RosterController::handleOnJIDAdded(const JID& jid) {
     auto state = chattables_.getState(jid);
     state.name = name;
     chattables_.setState(jid, state);
-}
+  }
 
-void RosterController::applyAllPresenceTo(const JID& jid) {
+  void RosterController::applyAllPresenceTo(const JID& jid) {
     for (auto&& presence : presenceOracle_->getAllPresence(jid)) {
-        roster_->applyOnItems(SetPresence(presence));
+      roster_->applyOnItems(SetPresence(presence));
     }
-}
+  }
 
-void RosterController::handleRosterCleared() {
+  void RosterController::handleRosterCleared() {
     roster_->removeAll();
-}
+  }
 
-void RosterController::handleOnJIDRemoved(const JID& jid) {
+  void RosterController::handleOnJIDRemoved(const JID& jid) {
     roster_->removeContact(jid);
-}
+  }
 
-void RosterController::handleOnJIDUpdated(const JID& jid, const std::string& oldName, const std::vector<std::string>& passedOldGroups) {
+  void RosterController::handleOnJIDUpdated(const JID& jid, const std::string& oldName, const std::vector<std::string>& passedOldGroups) {
     if (oldName != xmppRoster_->getNameForJID(jid)) {
-        roster_->applyOnItems(SetName(nickResolver_->jidToNick(jid), jid));
+      roster_->applyOnItems(SetName(nickResolver_->jidToNick(jid), jid));
     }
     std::vector<std::string> groups = xmppRoster_->getGroupsForJID(jid);
     std::vector<std::string> oldGroups = passedOldGroups;
     std::string name = nickResolver_->jidToNick(jid);
     std::string contactsGroup = QT_TRANSLATE_NOOP("", "Contacts");
     if (oldGroups.empty()) {
-        oldGroups.push_back(contactsGroup);
+      oldGroups.push_back(contactsGroup);
     }
     if (groups.empty()) {
-        groups.push_back(contactsGroup);
+      groups.push_back(contactsGroup);
     }
     for (const auto& group : groups) {
-        if (std::find(oldGroups.begin(), oldGroups.end(), group) == oldGroups.end()) {
-            roster_->addContact(jid, jid, name, group, avatarManager_->getAvatarPath(jid));
-        }
+      if (std::find(oldGroups.begin(), oldGroups.end(), group) == oldGroups.end()) {
+        roster_->addContact(jid, jid, name, group, avatarManager_->getAvatarPath(jid));
+      }
     }
     for (const auto& group : oldGroups) {
-        if (std::find(groups.begin(), groups.end(), group) == groups.end()) {
-            roster_->removeContactFromGroup(jid, group);
-            if (roster_->getGroup(group)->getChildren().size() == 0) {
-                roster_->removeGroup(group);
-            }
+      if (std::find(groups.begin(), groups.end(), group) == groups.end()) {
+        roster_->removeContactFromGroup(jid, group);
+        if (roster_->getGroup(group)->getChildren().size() == 0) {
+          roster_->removeGroup(group);
         }
+      }
     }
     applyAllPresenceTo(jid);
-}
+  }
 
-void RosterController::handleSettingChanged(const std::string& settingPath) {
+  void RosterController::handleSettingChanged(const std::string& settingPath) {
     if (settingPath == SettingConstants::SHOW_OFFLINE.getKey()) {
-        handleShowOfflineToggled(settings_->getSetting(SettingConstants::SHOW_OFFLINE));
+      handleShowOfflineToggled(settings_->getSetting(SettingConstants::SHOW_OFFLINE));
     }
-}
+  }
 
-void RosterController::handleBlockingStateChanged() {
+  void RosterController::handleBlockingStateChanged() {
     if (clientBlockListManager_->getBlockList()->getState() == BlockList::Available) {
-        for (const auto& jid : clientBlockListManager_->getBlockList()->getItems()) {
-            roster_->applyOnItems(SetBlockingState(jid, ContactRosterItem::IsBlocked));
-        }
+      for (const auto& jid : clientBlockListManager_->getBlockList()->getItems()) {
+        roster_->applyOnItems(SetBlockingState(jid, ContactRosterItem::IsBlocked));
+      }
     }
-}
+  }
 
-void RosterController::handleBlockingItemAdded(const JID& jid) {
+  void RosterController::handleBlockingItemAdded(const JID& jid) {
     roster_->applyOnItems(SetBlockingState(jid, ContactRosterItem::IsBlocked));
-}
+  }
 
-void RosterController::handleBlockingItemRemoved(const JID& jid) {
+  void RosterController::handleBlockingItemRemoved(const JID& jid) {
     roster_->applyOnItems(SetBlockingState(jid, ContactRosterItem::IsUnblocked));
-}
+  }
 
-void RosterController::handleUIEvent(std::shared_ptr<UIEvent> event) {
+  void RosterController::handleUIEvent(std::shared_ptr<UIEvent> event) {
     if (std::shared_ptr<AddContactUIEvent> addContactEvent = std::dynamic_pointer_cast<AddContactUIEvent>(event)) {
-        RosterItemPayload item;
-        item.setName(addContactEvent->getName());
-        item.setJID(addContactEvent->getJID());
-        item.setGroups(std::vector<std::string>(addContactEvent->getGroups().begin(), addContactEvent->getGroups().end()));
-        std::shared_ptr<RosterPayload> roster(new RosterPayload());
-        roster->addItem(item);
-        SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
-        request->onResponse.connect(boost::bind(&RosterController::handleRosterSetError, this, _1, roster));
-        request->send();
-        subscriptionManager_->requestSubscription(addContactEvent->getJID());
+      RosterItemPayload item;
+      item.setName(addContactEvent->getName());
+      item.setJID(addContactEvent->getJID());
+      item.setGroups(std::vector<std::string>(addContactEvent->getGroups().begin(), addContactEvent->getGroups().end()));
+      std::shared_ptr<RosterPayload> roster(new RosterPayload());
+      roster->addItem(item);
+      SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
+      request->onResponse.connect(boost::bind(&RosterController::handleRosterSetError, this, _1, roster));
+      request->send();
+      subscriptionManager_->requestSubscription(addContactEvent->getJID());
     }
     else if (std::shared_ptr<RemoveRosterItemUIEvent> removeEvent = std::dynamic_pointer_cast<RemoveRosterItemUIEvent>(event)) {
-        RosterItemPayload item(removeEvent->getJID(), "", RosterItemPayload::Remove);
-        std::shared_ptr<RosterPayload> roster(new RosterPayload());
-        roster->addItem(item);
-        SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
-        request->onResponse.connect(boost::bind(&RosterController::handleRosterSetError, this, _1, roster));
-        request->send();
-
+      RosterItemPayload item(removeEvent->getJID(), "", RosterItemPayload::Remove);
+      std::shared_ptr<RosterPayload> roster(new RosterPayload());
+      roster->addItem(item);
+      SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
+      request->onResponse.connect(boost::bind(&RosterController::handleRosterSetError, this, _1, roster));
+      request->send();
     }
     else if (std::shared_ptr<RenameRosterItemUIEvent> renameEvent = std::dynamic_pointer_cast<RenameRosterItemUIEvent>(event)) {
-        JID contact(renameEvent->getJID());
-        RosterItemPayload item(contact, renameEvent->getNewName(), xmppRoster_->getSubscriptionStateForJID(contact));
-        item.setGroups(xmppRoster_->getGroupsForJID(contact));
-        std::shared_ptr<RosterPayload> roster(new RosterPayload());
-        roster->addItem(item);
-        SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
-        request->onResponse.connect(boost::bind(&RosterController::handleRosterSetError, this, _1, roster));
-        request->send();
+      JID contact(renameEvent->getJID());
+      RosterItemPayload item(contact, renameEvent->getNewName(), xmppRoster_->getSubscriptionStateForJID(contact));
+      item.setGroups(xmppRoster_->getGroupsForJID(contact));
+      std::shared_ptr<RosterPayload> roster(new RosterPayload());
+      roster->addItem(item);
+      SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
+      request->onResponse.connect(boost::bind(&RosterController::handleRosterSetError, this, _1, roster));
+      request->send();
     }
     else if (std::shared_ptr<RenameGroupUIEvent> renameGroupEvent = std::dynamic_pointer_cast<RenameGroupUIEvent>(event)) {
-        std::vector<XMPPRosterItem> items = xmppRoster_->getItems();
-        std::string group = renameGroupEvent->getGroup();
-        // FIXME: We should handle contacts groups specially to avoid clashes
-        if (group == QT_TRANSLATE_NOOP("", "Contacts")) {
-            group = "";
+      std::vector<XMPPRosterItem> items = xmppRoster_->getItems();
+      std::string group = renameGroupEvent->getGroup();
+      // FIXME: We should handle contacts groups specially to avoid clashes
+      if (group == QT_TRANSLATE_NOOP("", "Contacts")) {
+        group = "";
+      }
+      for (auto& item : items) {
+        std::vector<std::string> groups = item.getGroups();
+        if ((group.empty() && groups.empty()) || std::find(groups.begin(), groups.end(), group) != groups.end()) {
+          groups.erase(std::remove(groups.begin(), groups.end(), group), groups.end());
+          if (std::find(groups.begin(), groups.end(), renameGroupEvent->getNewName()) == groups.end()) {
+            groups.push_back(renameGroupEvent->getNewName());
+          }
+          item.setGroups(groups);
+          updateItem(item);
         }
-        for (auto& item : items) {
-            std::vector<std::string> groups = item.getGroups();
-            if ( (group.empty() && groups.empty()) || std::find(groups.begin(), groups.end(), group) != groups.end()) {
-                groups.erase(std::remove(groups.begin(), groups.end(), group), groups.end());
-                if (std::find(groups.begin(), groups.end(), renameGroupEvent->getNewName()) == groups.end()) {
-                    groups.push_back(renameGroupEvent->getNewName());
-                }
-                item.setGroups(groups);
-                updateItem(item);
-            }
-        }
+      }
     }
-}
+  }
 
-void RosterController::setContactGroups(const JID& jid, const std::vector<std::string>& groups) {
+  void RosterController::setContactGroups(const JID& jid, const std::vector<std::string>& groups) {
     updateItem(XMPPRosterItem(jid, xmppRoster_->getNameForJID(jid), groups, xmppRoster_->getSubscriptionStateForJID(jid)));
-}
+  }
 
-void RosterController::updateItem(const XMPPRosterItem& item) {
+  void RosterController::updateItem(const XMPPRosterItem& item) {
     RosterItemPayload itemPayload(item.getJID(), item.getName(), item.getSubscription());
     itemPayload.setGroups(item.getGroups());
 
@@ -292,9 +292,9 @@ void RosterController::updateItem(const XMPPRosterItem& item) {
     SetRosterRequest::ref request = SetRosterRequest::create(roster, iqRouter_);
     request->onResponse.connect(boost::bind(&RosterController::handleRosterItemUpdated, this, _1, roster));
     request->send();
-}
+  }
 
-void RosterController::initBlockingCommand() {
+  void RosterController::initBlockingCommand() {
     std::shared_ptr<BlockList> blockList = clientBlockListManager_->requestBlockList();
 
     blockingOnStateChangedConnection_ = blockList->onStateChanged.connect(boost::bind(&RosterController::handleBlockingStateChanged, this));
@@ -302,118 +302,118 @@ void RosterController::initBlockingCommand() {
     blockingOnItemRemovedConnection_ = blockList->onItemRemoved.connect(boost::bind(&RosterController::handleBlockingItemRemoved, this, _1));
     roster_->setBlockingSupported(true);
     if (blockList->getState() == BlockList::Available) {
-        for (const auto& jid : blockList->getItems()) {
-            roster_->applyOnItems(SetBlockingState(jid, ContactRosterItem::IsBlocked));
-        }
+      for (const auto& jid : blockList->getItems()) {
+        roster_->applyOnItems(SetBlockingState(jid, ContactRosterItem::IsBlocked));
+      }
     }
-}
+  }
 
-void RosterController::handleRosterItemUpdated(ErrorPayload::ref error, std::shared_ptr<RosterPayload> rosterPayload) {
+  void RosterController::handleRosterItemUpdated(ErrorPayload::ref error, std::shared_ptr<RosterPayload> rosterPayload) {
     if (!!error) {
-        handleRosterSetError(error, rosterPayload);
+      handleRosterSetError(error, rosterPayload);
     }
     std::shared_ptr<BlockList> blockList = clientBlockListManager_->getBlockList();
     std::vector<RosterItemPayload> items = rosterPayload->getItems();
     if (blockList->getState() == BlockList::Available && items.size() > 0) {
-        std::vector<JID> jids = blockList->getItems();
-        if (std::find(jids.begin(), jids.end(), items[0].getJID()) != jids.end()) {
-            roster_->applyOnItems(SetBlockingState(items[0].getJID(), ContactRosterItem::IsBlocked));
-        }
+      std::vector<JID> jids = blockList->getItems();
+      if (std::find(jids.begin(), jids.end(), items[0].getJID()) != jids.end()) {
+        roster_->applyOnItems(SetBlockingState(items[0].getJID(), ContactRosterItem::IsBlocked));
+      }
     }
-}
+  }
 
-void RosterController::handleRosterSetError(ErrorPayload::ref error, std::shared_ptr<RosterPayload> rosterPayload) {
+  void RosterController::handleRosterSetError(ErrorPayload::ref error, std::shared_ptr<RosterPayload> rosterPayload) {
     if (!error) {
-        return;
+      return;
     }
     std::string text = str(format(QT_TRANSLATE_NOOP("", "Server %1% rejected contact list change to item '%2%'")) % myJID_.getDomain() % rosterPayload->getItems()[0].getJID().toString());
     if (!error->getText().empty()) {
-        text += ": " + error->getText();
+      text += ": " + error->getText();
     }
     std::shared_ptr<ErrorEvent> errorEvent(new ErrorEvent(JID(myJID_.getDomain()), text));
     eventController_->handleIncomingEvent(errorEvent);
-}
+  }
 
-void RosterController::handleIncomingPresence(Presence::ref newPresence) {
+  void RosterController::handleIncomingPresence(Presence::ref newPresence) {
     if (newPresence->getType() == Presence::Error) {
-        return;
+      return;
     }
     auto bareFrom = newPresence->getFrom().toBare();
     Presence::ref accountPresence = presenceOracle_->getAccountPresence(bareFrom);
     if (!accountPresence) {
-        accountPresence = Presence::create();
-        accountPresence->setFrom(newPresence->getFrom());
-        accountPresence->setType(Presence::Unavailable);
+      accountPresence = Presence::create();
+      accountPresence->setFrom(newPresence->getFrom());
+      accountPresence->setType(Presence::Unavailable);
     }
     roster_->applyOnItems(SetPresence(accountPresence));
     auto state = chattables_.getState(bareFrom);
     state.status = accountPresence->getShow();
     chattables_.setState(bareFrom, state);
-}
+  }
 
-void RosterController::handleSubscriptionRequest(const JID& jid, const std::string& message) {
+  void RosterController::handleSubscriptionRequest(const JID& jid, const std::string& message) {
     if (xmppRoster_->containsJID(jid) && (xmppRoster_->getSubscriptionStateForJID(jid) == RosterItemPayload::To || xmppRoster_->getSubscriptionStateForJID(jid) == RosterItemPayload::Both)) {
-        subscriptionManager_->confirmSubscription(jid);
-        return;
+      subscriptionManager_->confirmSubscription(jid);
+      return;
     }
     SubscriptionRequestEvent* eventPointer = new SubscriptionRequestEvent(jid, message);
     eventPointer->onAccept.connect(boost::bind(&RosterController::handleSubscriptionRequestAccepted, this, eventPointer));
     eventPointer->onDecline.connect(boost::bind(&RosterController::handleSubscriptionRequestDeclined, this, eventPointer));
     std::shared_ptr<StanzaEvent> event(eventPointer);
     eventController_->handleIncomingEvent(event);
-}
+  }
 
-void RosterController::handleSubscriptionRequestAccepted(SubscriptionRequestEvent* event) {
+  void RosterController::handleSubscriptionRequestAccepted(SubscriptionRequestEvent* event) {
     subscriptionManager_->confirmSubscription(event->getJID());
     if (!xmppRoster_->containsJID(event->getJID()) || xmppRoster_->getSubscriptionStateForJID(event->getJID()) == RosterItemPayload::None || xmppRoster_->getSubscriptionStateForJID(event->getJID()) == RosterItemPayload::From) {
-        subscriptionManager_->requestSubscription(event->getJID());
+      subscriptionManager_->requestSubscription(event->getJID());
     }
-}
+  }
 
-void RosterController::handleSubscriptionRequestDeclined(SubscriptionRequestEvent* event) {
+  void RosterController::handleSubscriptionRequestDeclined(SubscriptionRequestEvent* event) {
     subscriptionManager_->cancelSubscription(event->getJID());
-}
+  }
 
-void RosterController::handleOwnVCardChanged(VCard::ref vcard) {
+  void RosterController::handleOwnVCardChanged(VCard::ref vcard) {
     ownContact_->setVCard(vcard);
     mainWindow_->setMyContactRosterItem(ownContact_);
-}
+  }
 
-void RosterController::handleAvatarChanged(const JID& jid) {
+  void RosterController::handleAvatarChanged(const JID& jid) {
     boost::filesystem::path path = avatarManager_->getAvatarPath(jid);
     roster_->applyOnItems(SetAvatar(jid, path));
     if (jid.equals(myJID_, JID::WithoutResource)) {
-        mainWindow_->setMyAvatarPath(pathToString(path));
-        ownContact_->setAvatarPath(pathToString(path));
-        mainWindow_->setMyContactRosterItem(ownContact_);
+      mainWindow_->setMyAvatarPath(pathToString(path));
+      ownContact_->setAvatarPath(pathToString(path));
+      mainWindow_->setMyContactRosterItem(ownContact_);
     }
-}
+  }
 
-void RosterController::handlePresenceChanged(Presence::ref presence) {
+  void RosterController::handlePresenceChanged(Presence::ref presence) {
     if (presence->getFrom().equals(myJID_, JID::WithResource)) {
-        ownContact_->applyPresence(presence);
-        mainWindow_->setMyContactRosterItem(ownContact_);
+      ownContact_->applyPresence(presence);
+      mainWindow_->setMyContactRosterItem(ownContact_);
     }
     handleIncomingPresence(presence);
-}
+  }
 
-boost::optional<XMPPRosterItem> RosterController::getItem(const JID& jid) const {
+  boost::optional<XMPPRosterItem> RosterController::getItem(const JID& jid) const {
     return xmppRoster_->getItem(jid);
-}
+  }
 
-std::set<std::string> RosterController::getGroups() const {
+  std::set<std::string> RosterController::getGroups() const {
     return xmppRoster_->getGroups();
-}
+  }
 
-void RosterController::handleOnCapsChanged(const JID& jid) {
+  void RosterController::handleOnCapsChanged(const JID& jid) {
     std::set<ContactRosterItem::Feature> features;
     if (featureOracle_->isFileTransferSupported(jid.toBare()) == Tristate::Yes || featureOracle_->isFileTransferSupported(jid.toBare()) == Tristate::Maybe) {
-        features.insert(ContactRosterItem::FileTransferFeature);
+      features.insert(ContactRosterItem::FileTransferFeature);
     }
     if (featureOracle_->isWhiteboardSupported(jid.toBare()) == Tristate::Yes) {
-        features.insert(ContactRosterItem::WhiteboardFeature);
+      features.insert(ContactRosterItem::WhiteboardFeature);
     }
     roster_->applyOnItems(SetAvailableFeatures(jid, features));
-}
+  }
 
-}
+} // namespace Swift

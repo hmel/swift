@@ -8,7 +8,9 @@
 
 #include <memory>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+
 #include <boost/optional.hpp>
 
 #include <Swiften/Base/Algorithm.h>
@@ -31,7 +33,7 @@
 
 namespace Swift {
 
-CoreClient::CoreClient(const JID& jid, const SafeByteArray& password, NetworkFactories* networkFactories) : jid_(jid), password_(password), networkFactories(networkFactories), disconnectRequested_(false), certificateTrustChecker(nullptr) {
+  CoreClient::CoreClient(const JID& jid, const SafeByteArray& password, NetworkFactories* networkFactories) : jid_(jid), password_(password), networkFactories(networkFactories), disconnectRequested_(false), certificateTrustChecker(nullptr) {
     stanzaChannel_ = new ClientSessionStanzaChannel();
     stanzaChannel_->onMessageReceived.connect(boost::bind(&CoreClient::handleMessageReceived, this, _1));
     stanzaChannel_->onPresenceReceived.connect(boost::bind(&CoreClient::handlePresenceReceived, this, _1));
@@ -40,9 +42,9 @@ CoreClient::CoreClient(const JID& jid, const SafeByteArray& password, NetworkFac
 
     iqRouter_ = new IQRouter(stanzaChannel_);
     iqRouter_->setJID(jid);
-}
+  }
 
-CoreClient::~CoreClient() {
+  CoreClient::~CoreClient() {
     forceReset();
     delete iqRouter_;
 
@@ -51,9 +53,9 @@ CoreClient::~CoreClient() {
     stanzaChannel_->onPresenceReceived.disconnect(boost::bind(&CoreClient::handlePresenceReceived, this, _1));
     stanzaChannel_->onStanzaAcked.disconnect(boost::bind(&CoreClient::handleStanzaAcked, this, _1));
     delete stanzaChannel_;
-}
+  }
 
-void CoreClient::connect(const ClientOptions& o) {
+  void CoreClient::connect(const ClientOptions& o) {
     SWIFT_LOG(debug) << "Connecting ";
 
     forceReset();
@@ -61,129 +63,112 @@ void CoreClient::connect(const ClientOptions& o) {
 
     options = o;
 
-
     // Determine connection types to use
     assert(proxyConnectionFactories.empty());
     bool useDirectConnection = true;
     HostAddressPort systemSOCKS5Proxy = networkFactories->getProxyProvider()->getSOCKS5Proxy();
     HostAddressPort systemHTTPConnectProxy = networkFactories->getProxyProvider()->getHTTPConnectProxy();
     switch (o.proxyType) {
-        case ClientOptions::NoProxy:
-            SWIFT_LOG(debug) << " without a proxy";
-            break;
-        case ClientOptions::SystemConfiguredProxy:
-            SWIFT_LOG(debug) << " with a system configured proxy";
-            if (systemSOCKS5Proxy.isValid()) {
-                SWIFT_LOG(debug) << "Found SOCK5 Proxy: " << systemSOCKS5Proxy.getAddress().toString() << ":" << systemSOCKS5Proxy.getPort();
-                proxyConnectionFactories.push_back(new SOCKS5ProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), systemSOCKS5Proxy.getAddress().toString(), systemSOCKS5Proxy.getPort()));
-            }
-            if (systemHTTPConnectProxy.isValid()) {
-                SWIFT_LOG(debug) << "Found HTTPConnect Proxy: " << systemHTTPConnectProxy.getAddress().toString() << ":" << systemHTTPConnectProxy.getPort();
-                proxyConnectionFactories.push_back(new HTTPConnectProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), systemHTTPConnectProxy.getAddress().toString(), systemHTTPConnectProxy.getPort()));
-            }
-            break;
-        case ClientOptions::SOCKS5Proxy: {
-            SWIFT_LOG(debug) << " with manual configured SOCKS5 proxy";
-            std::string proxyHostname = o.manualProxyHostname.empty() ? systemSOCKS5Proxy.getAddress().toString() : o.manualProxyHostname;
-            auto proxyPort = systemSOCKS5Proxy.getPort();
-            if (o.manualProxyPort != -1) {
-                try {
-                    proxyPort = boost::numeric_cast<unsigned short>(o.manualProxyPort);
-                }
-                catch (const boost::numeric::bad_numeric_cast& e) {
-                    SWIFT_LOG(warning) << "Manual proxy port " << o.manualProxyPort << " is invalid: " << e.what();
-                    onDisconnected(boost::optional<ClientError>(ClientError::ConnectionError));
-                    return;
-                }
-            }
-            SWIFT_LOG(debug) << "Proxy: " << proxyHostname << ":" << proxyPort;
-            proxyConnectionFactories.push_back(new SOCKS5ProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), proxyHostname, proxyPort));
-            useDirectConnection = false;
-            break;
+      case ClientOptions::NoProxy:
+        SWIFT_LOG(debug) << " without a proxy";
+        break;
+      case ClientOptions::SystemConfiguredProxy:
+        SWIFT_LOG(debug) << " with a system configured proxy";
+        if (systemSOCKS5Proxy.isValid()) {
+          SWIFT_LOG(debug) << "Found SOCK5 Proxy: " << systemSOCKS5Proxy.getAddress().toString() << ":" << systemSOCKS5Proxy.getPort();
+          proxyConnectionFactories.push_back(new SOCKS5ProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), systemSOCKS5Proxy.getAddress().toString(), systemSOCKS5Proxy.getPort()));
         }
-        case ClientOptions::HTTPConnectProxy: {
-            SWIFT_LOG(debug) << " with manual configured HTTPConnect proxy";
-            std::string proxyHostname = o.manualProxyHostname.empty() ? systemHTTPConnectProxy.getAddress().toString() : o.manualProxyHostname;
-            unsigned short proxyPort = systemHTTPConnectProxy.getPort();
-            if (o.manualProxyPort != -1) {
-                try {
-                    proxyPort = boost::numeric_cast<unsigned short>(o.manualProxyPort);
-                }
-                catch (const boost::numeric::bad_numeric_cast& e) {
-                    SWIFT_LOG(warning) << "Manual proxy port " << o.manualProxyPort << " is invalid: " << e.what();
-                    onDisconnected(boost::optional<ClientError>(ClientError::ConnectionError));
-                    return;
-                }
-            }
-            SWIFT_LOG(debug) << "Proxy: " << proxyHostname << ":" << proxyPort;
-            proxyConnectionFactories.push_back(new HTTPConnectProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), proxyHostname, proxyPort, o.httpTrafficFilter));
-            useDirectConnection = false;
-            break;
+        if (systemHTTPConnectProxy.isValid()) {
+          SWIFT_LOG(debug) << "Found HTTPConnect Proxy: " << systemHTTPConnectProxy.getAddress().toString() << ":" << systemHTTPConnectProxy.getPort();
+          proxyConnectionFactories.push_back(new HTTPConnectProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), systemHTTPConnectProxy.getAddress().toString(), systemHTTPConnectProxy.getPort()));
         }
+        break;
+      case ClientOptions::SOCKS5Proxy: {
+        SWIFT_LOG(debug) << " with manual configured SOCKS5 proxy";
+        std::string proxyHostname = o.manualProxyHostname.empty() ? systemSOCKS5Proxy.getAddress().toString() : o.manualProxyHostname;
+        auto proxyPort = systemSOCKS5Proxy.getPort();
+        if (o.manualProxyPort != -1) {
+          try {
+            proxyPort = boost::numeric_cast<unsigned short>(o.manualProxyPort);
+          }
+          catch (const boost::numeric::bad_numeric_cast& e) {
+            SWIFT_LOG(warning) << "Manual proxy port " << o.manualProxyPort << " is invalid: " << e.what();
+            onDisconnected(boost::optional<ClientError>(ClientError::ConnectionError));
+            return;
+          }
+        }
+        SWIFT_LOG(debug) << "Proxy: " << proxyHostname << ":" << proxyPort;
+        proxyConnectionFactories.push_back(new SOCKS5ProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), proxyHostname, proxyPort));
+        useDirectConnection = false;
+        break;
+      }
+      case ClientOptions::HTTPConnectProxy: {
+        SWIFT_LOG(debug) << " with manual configured HTTPConnect proxy";
+        std::string proxyHostname = o.manualProxyHostname.empty() ? systemHTTPConnectProxy.getAddress().toString() : o.manualProxyHostname;
+        unsigned short proxyPort = systemHTTPConnectProxy.getPort();
+        if (o.manualProxyPort != -1) {
+          try {
+            proxyPort = boost::numeric_cast<unsigned short>(o.manualProxyPort);
+          }
+          catch (const boost::numeric::bad_numeric_cast& e) {
+            SWIFT_LOG(warning) << "Manual proxy port " << o.manualProxyPort << " is invalid: " << e.what();
+            onDisconnected(boost::optional<ClientError>(ClientError::ConnectionError));
+            return;
+          }
+        }
+        SWIFT_LOG(debug) << "Proxy: " << proxyHostname << ":" << proxyPort;
+        proxyConnectionFactories.push_back(new HTTPConnectProxiedConnectionFactory(networkFactories->getDomainNameResolver(), networkFactories->getConnectionFactory(), networkFactories->getTimerFactory(), proxyHostname, proxyPort, o.httpTrafficFilter));
+        useDirectConnection = false;
+        break;
+      }
     }
     std::vector<ConnectionFactory*> connectionFactories(proxyConnectionFactories);
     if (useDirectConnection) {
-        connectionFactories.push_back(networkFactories->getConnectionFactory());
+      connectionFactories.push_back(networkFactories->getConnectionFactory());
     }
 
     // Create connector
-    std::string host = o.manualHostname.empty() ?  jid_.getDomain() : o.manualHostname;
+    std::string host = o.manualHostname.empty() ? jid_.getDomain() : o.manualHostname;
     unsigned short port = 0;
     if (o.manualPort != -1) {
-        try {
-            port = boost::numeric_cast<unsigned short>(o.manualPort);
-        }
-        catch (const boost::numeric::bad_numeric_cast& e) {
-            SWIFT_LOG(warning) << "Invalid manual port " << o.manualPort << ": " << e.what();
-            onDisconnected(boost::optional<ClientError>(ClientError::ConnectionError));
-            return;
-        }
+      try {
+        port = boost::numeric_cast<unsigned short>(o.manualPort);
+      }
+      catch (const boost::numeric::bad_numeric_cast& e) {
+        SWIFT_LOG(warning) << "Invalid manual port " << o.manualPort << ": " << e.what();
+        onDisconnected(boost::optional<ClientError>(ClientError::ConnectionError));
+        return;
+      }
     }
     boost::optional<std::string> serviceLookupPrefix;
     if (o.manualHostname.empty()) {
-        serviceLookupPrefix = "_xmpp-client._tcp.";
+      serviceLookupPrefix = "_xmpp-client._tcp.";
     }
     assert(!connector_);
     if (options.boshURL.isEmpty()) {
-        connector_ = std::make_shared<ChainedConnector>(host, port, serviceLookupPrefix, networkFactories->getDomainNameResolver(), connectionFactories, networkFactories->getTimerFactory());
-        connector_->onConnectFinished.connect(boost::bind(&CoreClient::handleConnectorFinished, this, _1, _2));
-        connector_->setTimeoutMilliseconds(2*60*1000);
-        connector_->start();
+      connector_ = std::make_shared<ChainedConnector>(host, port, serviceLookupPrefix, networkFactories->getDomainNameResolver(), connectionFactories, networkFactories->getTimerFactory());
+      connector_->onConnectFinished.connect(boost::bind(&CoreClient::handleConnectorFinished, this, _1, _2));
+      connector_->setTimeoutMilliseconds(2 * 60 * 1000);
+      connector_->start();
     }
     else {
-        /* Autodiscovery of which proxy works is largely ok with a TCP session, because this is a one-off. With BOSH
+      /* Autodiscovery of which proxy works is largely ok with a TCP session, because this is a one-off. With BOSH
          * it would be quite painful given that potentially every stanza could be sent on a new connection.
          */
-        std::shared_ptr<BOSHSessionStream> boshSessionStream_ = std::shared_ptr<BOSHSessionStream>(new BOSHSessionStream(
-            options.boshURL,
-            getPayloadParserFactories(),
-            getPayloadSerializers(),
-            networkFactories->getConnectionFactory(),
-            networkFactories->getTLSContextFactory(),
-            networkFactories->getTimerFactory(),
-            networkFactories->getXMLParserFactory(),
-            networkFactories->getEventLoop(),
-            networkFactories->getDomainNameResolver(),
-            host,
-            options.boshHTTPConnectProxyURL,
-            options.boshHTTPConnectProxyAuthID,
-            options.boshHTTPConnectProxyAuthPassword,
-            options.tlsOptions,
-            options.httpTrafficFilter));
-        sessionStream_ = boshSessionStream_;
-        sessionStream_->onDataRead.connect(boost::bind(&CoreClient::handleDataRead, this, _1));
-        sessionStream_->onDataWritten.connect(boost::bind(&CoreClient::handleDataWritten, this, _1));
-        if (certificate_ && !certificate_->isNull()) {
-            SWIFT_LOG(debug) << "set certificate";
-            sessionStream_->setTLSCertificate(certificate_);
-        }
-        boshSessionStream_->open();
-        bindSessionToStream();
+      std::shared_ptr<BOSHSessionStream> boshSessionStream_ = std::shared_ptr<BOSHSessionStream>(new BOSHSessionStream(options.boshURL, getPayloadParserFactories(), getPayloadSerializers(), networkFactories->getConnectionFactory(), networkFactories->getTLSContextFactory(), networkFactories->getTimerFactory(), networkFactories->getXMLParserFactory(), networkFactories->getEventLoop(), networkFactories->getDomainNameResolver(), host, options.boshHTTPConnectProxyURL, options.boshHTTPConnectProxyAuthID, options.boshHTTPConnectProxyAuthPassword, options.tlsOptions, options.httpTrafficFilter));
+      sessionStream_ = boshSessionStream_;
+      sessionStream_->onDataRead.connect(boost::bind(&CoreClient::handleDataRead, this, _1));
+      sessionStream_->onDataWritten.connect(boost::bind(&CoreClient::handleDataWritten, this, _1));
+      if (certificate_ && !certificate_->isNull()) {
+        SWIFT_LOG(debug) << "set certificate";
+        sessionStream_->setTLSCertificate(certificate_);
+      }
+      boshSessionStream_->open();
+      bindSessionToStream();
     }
+  }
 
-}
-
-void CoreClient::bindSessionToStream() {
+  void CoreClient::bindSessionToStream() {
     session_ = ClientSession::create(jid_, sessionStream_, networkFactories->getIDNConverter(), networkFactories->getCryptoProvider(), networkFactories->getTimerFactory());
     session_->setCertificateTrustChecker(certificateTrustChecker);
     session_->setUseStreamCompression(options.useStreamCompression);
@@ -191,304 +176,303 @@ void CoreClient::bindSessionToStream() {
     session_->setSingleSignOn(options.singleSignOn);
     session_->setAuthenticationPort(options.manualPort);
     session_->setSessionShutdownTimeout(options.sessionShutdownTimeoutInMilliseconds);
-    switch(options.useTLS) {
-        case ClientOptions::UseTLSWhenAvailable:
-            session_->setUseTLS(ClientSession::UseTLSWhenAvailable);
-            break;
-        case ClientOptions::NeverUseTLS:
-            session_->setUseTLS(ClientSession::NeverUseTLS);
-            break;
-        case ClientOptions::RequireTLS:
-            session_->setUseTLS(ClientSession::RequireTLS);
-            break;
+    switch (options.useTLS) {
+      case ClientOptions::UseTLSWhenAvailable:
+        session_->setUseTLS(ClientSession::UseTLSWhenAvailable);
+        break;
+      case ClientOptions::NeverUseTLS:
+        session_->setUseTLS(ClientSession::NeverUseTLS);
+        break;
+      case ClientOptions::RequireTLS:
+        session_->setUseTLS(ClientSession::RequireTLS);
+        break;
     }
     session_->setUseAcks(options.useAcks);
     stanzaChannel_->setSession(session_);
     session_->onFinished.connect(boost::bind(&CoreClient::handleSessionFinished, this, _1));
     session_->onNeedCredentials.connect(boost::bind(&CoreClient::handleNeedCredentials, this));
     session_->start();
-}
+  }
 
-/**
+  /**
  * Only called for TCP sessions. BOSH is handled inside the BOSHSessionStream.
  */
-void CoreClient::handleConnectorFinished(std::shared_ptr<Connection> connection, std::shared_ptr<Error> error) {
+  void CoreClient::handleConnectorFinished(std::shared_ptr<Connection> connection, std::shared_ptr<Error> error) {
     resetConnector();
     if (!connection) {
-        if (options.forgetPassword) {
-            purgePassword();
-        }
-        boost::optional<ClientError> clientError;
-        if (!disconnectRequested_) {
-            clientError = std::dynamic_pointer_cast<DomainNameResolveError>(error) ? boost::optional<ClientError>(ClientError::DomainNameResolveError) : boost::optional<ClientError>(ClientError::ConnectionError);
-        }
-        onDisconnected(clientError);
+      if (options.forgetPassword) {
+        purgePassword();
+      }
+      boost::optional<ClientError> clientError;
+      if (!disconnectRequested_) {
+        clientError = std::dynamic_pointer_cast<DomainNameResolveError>(error) ? boost::optional<ClientError>(ClientError::DomainNameResolveError) : boost::optional<ClientError>(ClientError::ConnectionError);
+      }
+      onDisconnected(clientError);
     }
     else {
-        assert(!connection_);
-        assert(!sessionStream_);
+      assert(!connection_);
+      assert(!sessionStream_);
 
-        if (certificate_ && certificate_->isNull()) {
-            //certificate cannot be read so do not initailise session
-            onDisconnected(boost::optional<ClientError>(ClientError::ClientCertificateLoadError));
-            return;
-        }
+      if (certificate_ && certificate_->isNull()) {
+        //certificate cannot be read so do not initailise session
+        onDisconnected(boost::optional<ClientError>(ClientError::ClientCertificateLoadError));
+        return;
+      }
 
-        connection_ = connection;
+      connection_ = connection;
 
-        sessionStream_ = std::make_shared<BasicSessionStream>(ClientStreamType, connection_, getPayloadParserFactories(), getPayloadSerializers(), networkFactories->getTLSContextFactory(), networkFactories->getTimerFactory(), networkFactories->getXMLParserFactory(), options.tlsOptions);
-        if (certificate_) {
-            sessionStream_->setTLSCertificate(certificate_);
-        }
-        sessionStream_->onDataRead.connect(boost::bind(&CoreClient::handleDataRead, this, _1));
-        sessionStream_->onDataWritten.connect(boost::bind(&CoreClient::handleDataWritten, this, _1));
+      sessionStream_ = std::make_shared<BasicSessionStream>(ClientStreamType, connection_, getPayloadParserFactories(), getPayloadSerializers(), networkFactories->getTLSContextFactory(), networkFactories->getTimerFactory(), networkFactories->getXMLParserFactory(), options.tlsOptions);
+      if (certificate_) {
+        sessionStream_->setTLSCertificate(certificate_);
+      }
+      sessionStream_->onDataRead.connect(boost::bind(&CoreClient::handleDataRead, this, _1));
+      sessionStream_->onDataWritten.connect(boost::bind(&CoreClient::handleDataWritten, this, _1));
 
-        bindSessionToStream();
+      bindSessionToStream();
     }
-}
+  }
 
-void CoreClient::disconnect() {
+  void CoreClient::disconnect() {
     // FIXME: We should be able to do without this boolean. We just have to make sure we can tell the difference between
     // connector finishing without a connection due to an error or because of a disconnect.
     disconnectRequested_ = true;
     if (session_ && !session_->isFinished()) {
-        session_->finish();
+      session_->finish();
     }
     else if (connector_) {
-        connector_->stop();
+      connector_->stop();
     }
-}
+  }
 
-void CoreClient::setCertificate(CertificateWithKey::ref certificate) {
+  void CoreClient::setCertificate(CertificateWithKey::ref certificate) {
     certificate_ = certificate;
-}
+  }
 
-void CoreClient::handleSessionFinished(std::shared_ptr<Error> error) {
+  void CoreClient::handleSessionFinished(std::shared_ptr<Error> error) {
     if (options.forgetPassword) {
-        purgePassword();
+      purgePassword();
     }
     resetSession();
 
     boost::optional<ClientError> actualError;
     if (error) {
-        ClientError clientError;
-        if (std::shared_ptr<ClientSession::Error> actualError = std::dynamic_pointer_cast<ClientSession::Error>(error)) {
-            switch(actualError->type) {
-                case ClientSession::Error::AuthenticationFailedError:
-                    clientError = ClientError(ClientError::AuthenticationFailedError);
-                    break;
-                case ClientSession::Error::CompressionFailedError:
-                    clientError = ClientError(ClientError::CompressionFailedError);
-                    break;
-                case ClientSession::Error::ServerVerificationFailedError:
-                    clientError = ClientError(ClientError::ServerVerificationFailedError);
-                    break;
-                case ClientSession::Error::NoSupportedAuthMechanismsError:
-                    clientError = ClientError(ClientError::NoSupportedAuthMechanismsError);
-                    break;
-                case ClientSession::Error::UnexpectedElementError:
-                    clientError = ClientError(ClientError::UnexpectedElementError);
-                    break;
-                case ClientSession::Error::ResourceBindError:
-                    clientError = ClientError(ClientError::ResourceBindError);
-                    break;
-                case ClientSession::Error::SessionStartError:
-                    clientError = ClientError(ClientError::SessionStartError);
-                    break;
-                case ClientSession::Error::TLSError:
-                    clientError = ClientError(ClientError::TLSError);
-                    break;
-                case ClientSession::Error::TLSClientCertificateError:
-                    clientError = ClientError(ClientError::ClientCertificateError);
-                    break;
-                case ClientSession::Error::StreamError:
-                    clientError = ClientError(ClientError::StreamError);
-                    break;
-                case ClientSession::Error::StreamEndError:
-                    clientError = ClientError(ClientError::StreamError);
-                    break;
-            }
-            clientError.setErrorCode(actualError->errorCode);
+      ClientError clientError;
+      if (std::shared_ptr<ClientSession::Error> actualError = std::dynamic_pointer_cast<ClientSession::Error>(error)) {
+        switch (actualError->type) {
+          case ClientSession::Error::AuthenticationFailedError:
+            clientError = ClientError(ClientError::AuthenticationFailedError);
+            break;
+          case ClientSession::Error::CompressionFailedError:
+            clientError = ClientError(ClientError::CompressionFailedError);
+            break;
+          case ClientSession::Error::ServerVerificationFailedError:
+            clientError = ClientError(ClientError::ServerVerificationFailedError);
+            break;
+          case ClientSession::Error::NoSupportedAuthMechanismsError:
+            clientError = ClientError(ClientError::NoSupportedAuthMechanismsError);
+            break;
+          case ClientSession::Error::UnexpectedElementError:
+            clientError = ClientError(ClientError::UnexpectedElementError);
+            break;
+          case ClientSession::Error::ResourceBindError:
+            clientError = ClientError(ClientError::ResourceBindError);
+            break;
+          case ClientSession::Error::SessionStartError:
+            clientError = ClientError(ClientError::SessionStartError);
+            break;
+          case ClientSession::Error::TLSError:
+            clientError = ClientError(ClientError::TLSError);
+            break;
+          case ClientSession::Error::TLSClientCertificateError:
+            clientError = ClientError(ClientError::ClientCertificateError);
+            break;
+          case ClientSession::Error::StreamError:
+            clientError = ClientError(ClientError::StreamError);
+            break;
+          case ClientSession::Error::StreamEndError:
+            clientError = ClientError(ClientError::StreamError);
+            break;
         }
-        else if (std::shared_ptr<TLSError> actualError = std::dynamic_pointer_cast<TLSError>(error)) {
-            switch(actualError->getType()) {
-                case TLSError::CertificateCardRemoved:
-                    clientError = ClientError(ClientError::CertificateCardRemoved);
-                    break;
-                case TLSError::UnknownError:
-                case TLSError::AcceptFailed:
-                case TLSError::ConnectFailed:
-                    clientError = ClientError(ClientError::TLSError);
-                    break;
-            }
+        clientError.setErrorCode(actualError->errorCode);
+      }
+      else if (std::shared_ptr<TLSError> actualError = std::dynamic_pointer_cast<TLSError>(error)) {
+        switch (actualError->getType()) {
+          case TLSError::CertificateCardRemoved:
+            clientError = ClientError(ClientError::CertificateCardRemoved);
+            break;
+          case TLSError::UnknownError:
+          case TLSError::AcceptFailed:
+          case TLSError::ConnectFailed:
+            clientError = ClientError(ClientError::TLSError);
+            break;
         }
-        else if (std::shared_ptr<SessionStream::SessionStreamError> actualError = std::dynamic_pointer_cast<SessionStream::SessionStreamError>(error)) {
-            switch(actualError->type) {
-                case SessionStream::SessionStreamError::ParseError:
-                    clientError = ClientError(ClientError::XMLError);
-                    break;
-                case SessionStream::SessionStreamError::TLSError:
-                    clientError = ClientError(ClientError::TLSError);
-                    break;
-                case SessionStream::SessionStreamError::InvalidTLSCertificateError:
-                    clientError = ClientError(ClientError::ClientCertificateLoadError);
-                    break;
-                case SessionStream::SessionStreamError::ConnectionReadError:
-                    clientError = ClientError(ClientError::ConnectionReadError);
-                    break;
-                case SessionStream::SessionStreamError::ConnectionWriteError:
-                    clientError = ClientError(ClientError::ConnectionWriteError);
-                    break;
-            }
+      }
+      else if (std::shared_ptr<SessionStream::SessionStreamError> actualError = std::dynamic_pointer_cast<SessionStream::SessionStreamError>(error)) {
+        switch (actualError->type) {
+          case SessionStream::SessionStreamError::ParseError:
+            clientError = ClientError(ClientError::XMLError);
+            break;
+          case SessionStream::SessionStreamError::TLSError:
+            clientError = ClientError(ClientError::TLSError);
+            break;
+          case SessionStream::SessionStreamError::InvalidTLSCertificateError:
+            clientError = ClientError(ClientError::ClientCertificateLoadError);
+            break;
+          case SessionStream::SessionStreamError::ConnectionReadError:
+            clientError = ClientError(ClientError::ConnectionReadError);
+            break;
+          case SessionStream::SessionStreamError::ConnectionWriteError:
+            clientError = ClientError(ClientError::ConnectionWriteError);
+            break;
         }
-        else if (std::shared_ptr<CertificateVerificationError> verificationError = std::dynamic_pointer_cast<CertificateVerificationError>(error)) {
-            switch(verificationError->getType()) {
-                case CertificateVerificationError::UnknownError:
-                    clientError = ClientError(ClientError::UnknownCertificateError);
-                    break;
-                case CertificateVerificationError::Expired:
-                    clientError = ClientError(ClientError::CertificateExpiredError);
-                    break;
-                case CertificateVerificationError::NotYetValid:
-                    clientError = ClientError(ClientError::CertificateNotYetValidError);
-                    break;
-                case CertificateVerificationError::SelfSigned:
-                    clientError = ClientError(ClientError::CertificateSelfSignedError);
-                    break;
-                case CertificateVerificationError::Rejected:
-                    clientError = ClientError(ClientError::CertificateRejectedError);
-                    break;
-                case CertificateVerificationError::Untrusted:
-                    clientError = ClientError(ClientError::CertificateUntrustedError);
-                    break;
-                case CertificateVerificationError::InvalidPurpose:
-                    clientError = ClientError(ClientError::InvalidCertificatePurposeError);
-                    break;
-                case CertificateVerificationError::PathLengthExceeded:
-                    clientError = ClientError(ClientError::CertificatePathLengthExceededError);
-                    break;
-                case CertificateVerificationError::InvalidSignature:
-                    clientError = ClientError(ClientError::InvalidCertificateSignatureError);
-                    break;
-                case CertificateVerificationError::InvalidCA:
-                    clientError = ClientError(ClientError::InvalidCAError);
-                    break;
-                case CertificateVerificationError::InvalidServerIdentity:
-                    clientError = ClientError(ClientError::InvalidServerIdentityError);
-                    break;
-                case CertificateVerificationError::Revoked:
-                    clientError = ClientError(ClientError::RevokedError);
-                    break;
-                case CertificateVerificationError::RevocationCheckFailed:
-                    clientError = ClientError(ClientError::RevocationCheckFailedError);
-                    break;
-            }
+      }
+      else if (std::shared_ptr<CertificateVerificationError> verificationError = std::dynamic_pointer_cast<CertificateVerificationError>(error)) {
+        switch (verificationError->getType()) {
+          case CertificateVerificationError::UnknownError:
+            clientError = ClientError(ClientError::UnknownCertificateError);
+            break;
+          case CertificateVerificationError::Expired:
+            clientError = ClientError(ClientError::CertificateExpiredError);
+            break;
+          case CertificateVerificationError::NotYetValid:
+            clientError = ClientError(ClientError::CertificateNotYetValidError);
+            break;
+          case CertificateVerificationError::SelfSigned:
+            clientError = ClientError(ClientError::CertificateSelfSignedError);
+            break;
+          case CertificateVerificationError::Rejected:
+            clientError = ClientError(ClientError::CertificateRejectedError);
+            break;
+          case CertificateVerificationError::Untrusted:
+            clientError = ClientError(ClientError::CertificateUntrustedError);
+            break;
+          case CertificateVerificationError::InvalidPurpose:
+            clientError = ClientError(ClientError::InvalidCertificatePurposeError);
+            break;
+          case CertificateVerificationError::PathLengthExceeded:
+            clientError = ClientError(ClientError::CertificatePathLengthExceededError);
+            break;
+          case CertificateVerificationError::InvalidSignature:
+            clientError = ClientError(ClientError::InvalidCertificateSignatureError);
+            break;
+          case CertificateVerificationError::InvalidCA:
+            clientError = ClientError(ClientError::InvalidCAError);
+            break;
+          case CertificateVerificationError::InvalidServerIdentity:
+            clientError = ClientError(ClientError::InvalidServerIdentityError);
+            break;
+          case CertificateVerificationError::Revoked:
+            clientError = ClientError(ClientError::RevokedError);
+            break;
+          case CertificateVerificationError::RevocationCheckFailed:
+            clientError = ClientError(ClientError::RevocationCheckFailedError);
+            break;
         }
-        actualError = boost::optional<ClientError>(clientError);
+      }
+      actualError = boost::optional<ClientError>(clientError);
     }
     onDisconnected(actualError);
-}
+  }
 
-void CoreClient::handleNeedCredentials() {
+  void CoreClient::handleNeedCredentials() {
     assert(session_);
     session_->sendCredentials(password_);
     if (options.forgetPassword) {
-        purgePassword();
+      purgePassword();
     }
-}
+  }
 
-void CoreClient::handleDataRead(const SafeByteArray& data) {
+  void CoreClient::handleDataRead(const SafeByteArray& data) {
     onDataRead(data);
-}
+  }
 
-void CoreClient::handleDataWritten(const SafeByteArray& data) {
+  void CoreClient::handleDataWritten(const SafeByteArray& data) {
     onDataWritten(data);
-}
+  }
 
-void CoreClient::handleStanzaChannelAvailableChanged(bool available) {
+  void CoreClient::handleStanzaChannelAvailableChanged(bool available) {
     if (available) {
-        iqRouter_->setJID(session_->getLocalJID());
-        handleConnected();
-        onConnected();
+      iqRouter_->setJID(session_->getLocalJID());
+      handleConnected();
+      onConnected();
     }
-}
+  }
 
-void CoreClient::sendMessage(std::shared_ptr<Message> message) {
+  void CoreClient::sendMessage(std::shared_ptr<Message> message) {
     stanzaChannel_->sendMessage(message);
-}
+  }
 
-void CoreClient::sendPresence(std::shared_ptr<Presence> presence) {
+  void CoreClient::sendPresence(std::shared_ptr<Presence> presence) {
     stanzaChannel_->sendPresence(presence);
-}
+  }
 
-void CoreClient::sendData(const std::string& data) {
+  void CoreClient::sendData(const std::string& data) {
     if (!sessionStream_) {
-        SWIFT_LOG(warning) << "Client: Trying to send data while disconnected.";
-        return;
+      SWIFT_LOG(warning) << "Client: Trying to send data while disconnected.";
+      return;
     }
     sessionStream_->writeData(data);
-}
+  }
 
-bool CoreClient::isActive() const {
+  bool CoreClient::isActive() const {
     return (session_ && !session_->isFinished()) || connector_;
-}
+  }
 
-void CoreClient::setCertificateTrustChecker(CertificateTrustChecker* checker) {
+  void CoreClient::setCertificateTrustChecker(CertificateTrustChecker* checker) {
     certificateTrustChecker = checker;
-}
+  }
 
-
-void CoreClient::handlePresenceReceived(Presence::ref presence) {
+  void CoreClient::handlePresenceReceived(Presence::ref presence) {
     onPresenceReceived(presence);
-}
+  }
 
-void CoreClient::handleMessageReceived(Message::ref message) {
+  void CoreClient::handleMessageReceived(Message::ref message) {
     onMessageReceived(message);
-}
+  }
 
-void CoreClient::handleStanzaAcked(Stanza::ref stanza) {
+  void CoreClient::handleStanzaAcked(Stanza::ref stanza) {
     onStanzaAcked(stanza);
-}
+  }
 
-bool CoreClient::isAvailable() const {
+  bool CoreClient::isAvailable() const {
     return stanzaChannel_->isAvailable();
-}
+  }
 
-bool CoreClient::getStreamManagementEnabled() const {
+  bool CoreClient::getStreamManagementEnabled() const {
     return stanzaChannel_->getStreamManagementEnabled();
-}
+  }
 
-bool CoreClient::isStreamEncrypted() const {
+  bool CoreClient::isStreamEncrypted() const {
     return sessionStream_->isTLSEncrypted();
-}
+  }
 
-StanzaChannel* CoreClient::getStanzaChannel() const {
+  StanzaChannel* CoreClient::getStanzaChannel() const {
     return stanzaChannel_;
-}
+  }
 
-const JID& CoreClient::getJID() const {
+  const JID& CoreClient::getJID() const {
     if (session_) {
-        return session_->getLocalJID();
+      return session_->getLocalJID();
     }
     else {
-        return jid_;
+      return jid_;
     }
-}
+  }
 
-void CoreClient::purgePassword() {
+  void CoreClient::purgePassword() {
     safeClear(password_);
-}
+  }
 
-void CoreClient::resetConnector() {
+  void CoreClient::resetConnector() {
     connector_->onConnectFinished.disconnect(boost::bind(&CoreClient::handleConnectorFinished, this, _1, _2));
     connector_.reset();
     for (auto f : proxyConnectionFactories) {
-        delete f;
+      delete f;
     }
     proxyConnectionFactories.clear();
-}
+  }
 
-void CoreClient::resetSession() {
+  void CoreClient::resetSession() {
     session_->onFinished.disconnect(boost::bind(&CoreClient::handleSessionFinished, this, _1));
     session_->onNeedCredentials.disconnect(boost::bind(&CoreClient::handleNeedCredentials, this));
 
@@ -496,24 +480,24 @@ void CoreClient::resetSession() {
     sessionStream_->onDataWritten.disconnect(boost::bind(&CoreClient::handleDataWritten, this, _1));
 
     if (connection_) {
-        connection_->disconnect();
+      connection_->disconnect();
     }
     else if (std::dynamic_pointer_cast<BOSHSessionStream>(sessionStream_)) {
-        sessionStream_->close();
+      sessionStream_->close();
     }
     sessionStream_.reset();
     connection_.reset();
-}
+  }
 
-void CoreClient::forceReset() {
+  void CoreClient::forceReset() {
     if (connector_) {
-        SWIFT_LOG(warning) << "Client not disconnected properly: Connector still active";
-        resetConnector();
+      SWIFT_LOG(warning) << "Client not disconnected properly: Connector still active";
+      resetConnector();
     }
     if (sessionStream_ || connection_) {
-        SWIFT_LOG(warning) << "Client not disconnected properly: Session still active";
-        resetSession();
+      SWIFT_LOG(warning) << "Client not disconnected properly: Session still active";
+      resetSession();
     }
-}
+  }
 
-}
+} // namespace Swift

@@ -6,21 +6,21 @@
 
 #include <Swiften/StreamStack/ConnectionLayer.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 namespace Swift {
 
-ConnectionLayer::ConnectionLayer(std::shared_ptr<Connection> connection) : connection(connection) {
+  ConnectionLayer::ConnectionLayer(std::shared_ptr<Connection> connection) : connection(connection) {
     connection->onDataRead.connect(boost::bind(&ConnectionLayer::handleDataRead, this, _1));
-}
+  }
 
-ConnectionLayer::~ConnectionLayer() {
+  ConnectionLayer::~ConnectionLayer() {
     connection->onDataRead.disconnect(boost::bind(&ConnectionLayer::handleDataRead, this, _1));
-}
+  }
 
-void ConnectionLayer::handleDataRead(std::shared_ptr<SafeByteArray> data) {
+  void ConnectionLayer::handleDataRead(std::shared_ptr<SafeByteArray> data) {
     writeDataToParentLayer(*data);
-}
+  }
 
-
-}
+} // namespace Swift

@@ -7,8 +7,9 @@
 #include <Swiften/Network/BoostTimer.h>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <Swiften/EventLoop/EventLoop.h>

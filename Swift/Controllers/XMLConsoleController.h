@@ -8,7 +8,9 @@
 
 #include <memory>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+
 #include <boost/signals2.hpp>
 
 #include <Swiften/Base/SafeByteArray.h>
@@ -17,23 +19,23 @@
 
 namespace Swift {
 
-    class XMLConsoleWidgetFactory;
-    class XMLConsoleWidget;
+  class XMLConsoleWidgetFactory;
+  class XMLConsoleWidget;
 
-    class XMLConsoleController {
-        public:
-            XMLConsoleController(UIEventStream* uiEventStream, XMLConsoleWidgetFactory* xmlConsoleWidgetFactory);
-            ~XMLConsoleController();
+  class XMLConsoleController {
+  public:
+    XMLConsoleController(UIEventStream* uiEventStream, XMLConsoleWidgetFactory* xmlConsoleWidgetFactory);
+    ~XMLConsoleController();
 
-        public:
-            void handleDataRead(const SafeByteArray& data);
-            void handleDataWritten(const SafeByteArray& data);
+  public:
+    void handleDataRead(const SafeByteArray& data);
+    void handleDataWritten(const SafeByteArray& data);
 
-        private:
-            void handleUIEvent(std::shared_ptr<UIEvent> event);
+  private:
+    void handleUIEvent(std::shared_ptr<UIEvent> event);
 
-        private:
-            XMLConsoleWidgetFactory* xmlConsoleWidgetFactory;
-            XMLConsoleWidget* xmlConsoleWidget;
-    };
-}
+  private:
+    XMLConsoleWidgetFactory* xmlConsoleWidgetFactory;
+    XMLConsoleWidget* xmlConsoleWidget;
+  };
+} // namespace Swift

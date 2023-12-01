@@ -6,27 +6,26 @@
 
 #include <Swiften/Avatars/OfflineAvatarManager.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/Avatars/AvatarStorage.h>
 
 namespace Swift {
 
-OfflineAvatarManager::OfflineAvatarManager(AvatarStorage* avatarStorage) : avatarStorage(avatarStorage) {
-}
+  OfflineAvatarManager::OfflineAvatarManager(AvatarStorage* avatarStorage) : avatarStorage(avatarStorage) {}
 
-OfflineAvatarManager::~OfflineAvatarManager() {
-}
+  OfflineAvatarManager::~OfflineAvatarManager() {}
 
-boost::optional<std::string> OfflineAvatarManager::getAvatarHash(const JID& jid) const {
+  boost::optional<std::string> OfflineAvatarManager::getAvatarHash(const JID& jid) const {
     return avatarStorage->getAvatarForJID(jid);
-}
+  }
 
-void OfflineAvatarManager::setAvatar(const JID& jid, const std::string& hash) {
+  void OfflineAvatarManager::setAvatar(const JID& jid, const std::string& hash) {
     if (getAvatarHash(jid) != hash) {
-        avatarStorage->setAvatarForJID(jid, hash);
-        onAvatarChanged(jid);
+      avatarStorage->setAvatarForJID(jid, hash);
+      onAvatarChanged(jid);
     }
-}
+  }
 
-}
+} // namespace Swift

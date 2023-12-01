@@ -7,7 +7,7 @@
 #include <Swift/QtUI/QtTextEdit.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <boost/tuple/tuple.hpp>

@@ -4,30 +4,31 @@
  * See the COPYING file for more information.
  */
 
-#include <Swift/Controllers/AdHocController.h>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
-#include <boost/bind.hpp>
+#include <Swift/Controllers/AdHocController.h>
 
 #include <Swift/Controllers/UIInterfaces/AdHocCommandWindowFactory.h>
 
 namespace Swift {
 
-AdHocController::AdHocController(AdHocCommandWindowFactory* factory, std::shared_ptr<OutgoingAdHocCommandSession> command) {
+  AdHocController::AdHocController(AdHocCommandWindowFactory* factory, std::shared_ptr<OutgoingAdHocCommandSession> command) {
     window_ = factory->createAdHocCommandWindow(command);
     window_->onClosing.connect(boost::bind(&AdHocController::handleWindowClosed, this));
-}
+  }
 
-AdHocController::~AdHocController() {
+  AdHocController::~AdHocController() {
     window_->onClosing.disconnect(boost::bind(&AdHocController::handleWindowClosed, this));
     delete window_;
-}
+  }
 
-void AdHocController::setOnline(bool online) {
+  void AdHocController::setOnline(bool online) {
     window_->setOnline(online);
-}
+  }
 
-void AdHocController::handleWindowClosed() {
+  void AdHocController::handleWindowClosed() {
     onDeleting();
-}
+  }
 
-}
+} // namespace Swift

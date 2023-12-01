@@ -6,7 +6,7 @@
 
 #include <Swiften/FileTransfer/SOCKS5BytestreamServerSession.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <boost/numeric/conversion/cast.hpp>

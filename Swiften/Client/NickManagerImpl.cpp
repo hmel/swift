@@ -6,45 +6,45 @@
 
 #include <Swiften/Client/NickManagerImpl.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/VCards/VCardManager.h>
 
 namespace Swift {
 
-NickManagerImpl::NickManagerImpl(const JID& ownJID, VCardManager* vcardManager) : ownJID(ownJID), vcardManager(vcardManager) {
+  NickManagerImpl::NickManagerImpl(const JID& ownJID, VCardManager* vcardManager) : ownJID(ownJID), vcardManager(vcardManager) {
     vcardManager->onVCardChanged.connect(boost::bind(&NickManagerImpl::handleVCardReceived, this, _1, _2));
 
     updateOwnNickFromVCard(vcardManager->getVCard(ownJID.toBare()));
-}
+  }
 
-NickManagerImpl::~NickManagerImpl() {
+  NickManagerImpl::~NickManagerImpl() {
     vcardManager->onVCardChanged.disconnect(boost::bind(&NickManagerImpl::handleVCardReceived, this, _1, _2));
-}
+  }
 
-std::string NickManagerImpl::getOwnNick() const {
+  std::string NickManagerImpl::getOwnNick() const {
     return ownNick;
-}
+  }
 
-void NickManagerImpl::setOwnNick(const std::string&) {
-}
+  void NickManagerImpl::setOwnNick(const std::string&) {}
 
-void NickManagerImpl::handleVCardReceived(const JID& jid, VCard::ref vcard) {
+  void NickManagerImpl::handleVCardReceived(const JID& jid, VCard::ref vcard) {
     if (!jid.equals(ownJID, JID::WithoutResource)) {
-        return;
+      return;
     }
     updateOwnNickFromVCard(vcard);
-}
+  }
 
-void NickManagerImpl::updateOwnNickFromVCard(VCard::ref vcard) {
+  void NickManagerImpl::updateOwnNickFromVCard(VCard::ref vcard) {
     std::string nick;
     if (vcard && !vcard->getNickname().empty()) {
-        nick = vcard->getNickname();
+      nick = vcard->getNickname();
     }
     if (ownNick != nick) {
-        ownNick = nick;
-        onOwnNickChanged(ownNick);
+      ownNick = nick;
+      onOwnNickChanged(ownNick);
     }
-}
+  }
 
-}
+} // namespace Swift

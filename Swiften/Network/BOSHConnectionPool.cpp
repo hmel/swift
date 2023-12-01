@@ -7,7 +7,7 @@
 
 #include <climits>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 #include <boost/lexical_cast.hpp>
 

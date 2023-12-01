@@ -6,7 +6,7 @@
 
 #include <Swiften/Session/Session.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <Swiften/StreamStack/StreamStack.h>

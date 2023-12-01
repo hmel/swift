@@ -9,7 +9,8 @@
 #include <memory>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <Swiften/VCards/VCardManager.h>
 
@@ -21,30 +22,30 @@
 
 namespace Swift {
 
-ContactEditController::ContactEditController(RosterController* rosterController, VCardManager* vcardManager, ContactEditWindowFactory* contactEditWindowFactory, UIEventStream* uiEventStream) : rosterController(rosterController), vcardManager(vcardManager), contactEditWindowFactory(contactEditWindowFactory), uiEventStream(uiEventStream), contactEditWindow(nullptr) {
+  ContactEditController::ContactEditController(RosterController* rosterController, VCardManager* vcardManager, ContactEditWindowFactory* contactEditWindowFactory, UIEventStream* uiEventStream) : rosterController(rosterController), vcardManager(vcardManager), contactEditWindowFactory(contactEditWindowFactory), uiEventStream(uiEventStream), contactEditWindow(nullptr) {
     uiEventStream->onUIEvent.connect(boost::bind(&ContactEditController::handleUIEvent, this, _1));
     vcardManager->onVCardChanged.connect(boost::bind(&ContactEditController::handleVCardChanged, this, _1, _2));
-}
+  }
 
-ContactEditController::~ContactEditController() {
+  ContactEditController::~ContactEditController() {
     if (contactEditWindow) {
-        contactEditWindow->onChangeContactRequest.disconnect(boost::bind(&ContactEditController::handleChangeContactRequest, this, _1, _2));
-        contactEditWindow->onRemoveContactRequest.disconnect(boost::bind(&ContactEditController::handleRemoveContactRequest, this));
-        delete contactEditWindow;
+      contactEditWindow->onChangeContactRequest.disconnect(boost::bind(&ContactEditController::handleChangeContactRequest, this, _1, _2));
+      contactEditWindow->onRemoveContactRequest.disconnect(boost::bind(&ContactEditController::handleRemoveContactRequest, this));
+      delete contactEditWindow;
     }
     uiEventStream->onUIEvent.disconnect(boost::bind(&ContactEditController::handleUIEvent, this, _1));
-}
+  }
 
-void ContactEditController::handleUIEvent(UIEvent::ref event) {
+  void ContactEditController::handleUIEvent(UIEvent::ref event) {
     RequestContactEditorUIEvent::ref editEvent = std::dynamic_pointer_cast<RequestContactEditorUIEvent>(event);
     if (!editEvent) {
-        return;
+      return;
     }
 
     if (!contactEditWindow) {
-        contactEditWindow = contactEditWindowFactory->createContactEditWindow();
-        contactEditWindow->onRemoveContactRequest.connect(boost::bind(&ContactEditController::handleRemoveContactRequest, this));
-        contactEditWindow->onChangeContactRequest.connect(boost::bind(&ContactEditController::handleChangeContactRequest, this, _1, _2));
+      contactEditWindow = contactEditWindowFactory->createContactEditWindow();
+      contactEditWindow->onRemoveContactRequest.connect(boost::bind(&ContactEditController::handleRemoveContactRequest, this));
+      contactEditWindow->onChangeContactRequest.connect(boost::bind(&ContactEditController::handleChangeContactRequest, this, _1, _2));
     }
     currentContact = rosterController->getItem(editEvent->getJID());
     assert(currentContact);
@@ -53,58 +54,58 @@ void ContactEditController::handleUIEvent(UIEvent::ref event) {
     contactEditWindow->show();
 
     if (vcardManager) {
-        VCard::ref vcard = vcardManager->getVCardAndRequestWhenNeeded(jid);
-        if (vcard) {
-            handleVCardChanged(jid, vcard);
-        }
+      VCard::ref vcard = vcardManager->getVCardAndRequestWhenNeeded(jid);
+      if (vcard) {
+        handleVCardChanged(jid, vcard);
+      }
     }
-}
+  }
 
-void ContactEditController::handleVCardChanged(const JID &jid, VCard::ref vcard) {
+  void ContactEditController::handleVCardChanged(const JID& jid, VCard::ref vcard) {
     if (jid == this->jid) {
-        contactEditWindow->setNameSuggestions(nameSuggestionsFromVCard(vcard));
+      contactEditWindow->setNameSuggestions(nameSuggestionsFromVCard(vcard));
     }
-}
+  }
 
-void ContactEditController::setAvailable(bool b) {
+  void ContactEditController::setAvailable(bool b) {
     if (contactEditWindow) {
-        contactEditWindow->setEnabled(b);
+      contactEditWindow->setEnabled(b);
     }
-}
+  }
 
-std::vector<std::string> ContactEditController::nameSuggestionsFromVCard(VCard::ref vcard) {
+  std::vector<std::string> ContactEditController::nameSuggestionsFromVCard(VCard::ref vcard) {
     std::vector<std::string> suggestions;
     if (!vcard->getNickname().empty()) {
-        suggestions.push_back(vcard->getNickname());
+      suggestions.push_back(vcard->getNickname());
     }
     if (!vcard->getFullName().empty()) {
-        suggestions.push_back(vcard->getFullName());
+      suggestions.push_back(vcard->getFullName());
     }
     if (!vcard->getGivenName().empty()) {
-        std::string suggestedName;
-        suggestedName = vcard->getGivenName();
-        boost::algorithm::trim(suggestedName);
-        suggestions.push_back(suggestedName);
+      std::string suggestedName;
+      suggestedName = vcard->getGivenName();
+      boost::algorithm::trim(suggestedName);
+      suggestions.push_back(suggestedName);
     }
     return suggestions;
-}
+  }
 
-void ContactEditController::handleRemoveContactRequest() {
+  void ContactEditController::handleRemoveContactRequest() {
     assert(currentContact);
     uiEventStream->send(std::make_shared<RemoveRosterItemUIEvent>(currentContact->getJID()));
     contactEditWindow->hide();
-}
+  }
 
-void ContactEditController::handleChangeContactRequest(const std::string& name, const std::set<std::string>& newGroups) {
+  void ContactEditController::handleChangeContactRequest(const std::string& name, const std::set<std::string>& newGroups) {
     std::vector<std::string> oldGroupsVector = currentContact->getGroups();
     std::set<std::string> oldGroups(oldGroupsVector.begin(), oldGroupsVector.end());
     if (oldGroups != newGroups || currentContact->getName() != name) {
-        XMPPRosterItem newContact(*currentContact);
-        newContact.setName(name);
-        newContact.setGroups(std::vector<std::string>(newGroups.begin(), newGroups.end()));
-        rosterController->updateItem(newContact);
+      XMPPRosterItem newContact(*currentContact);
+      newContact.setName(name);
+      newContact.setGroups(std::vector<std::string>(newGroups.begin(), newGroups.end()));
+      rosterController->updateItem(newContact);
     }
     contactEditWindow->hide();
-}
+  }
 
-}
+} // namespace Swift

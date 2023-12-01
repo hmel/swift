@@ -12,7 +12,7 @@
 
 #include <Swift/QtUI/QtFileTransferListItemModel.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 using namespace boost::placeholders;
 
 #include <boost/cstdint.hpp>
