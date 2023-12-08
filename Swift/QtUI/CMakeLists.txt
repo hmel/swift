@@ -166,6 +166,7 @@ set(SWIFT_SRCS
 
   #Resource files
   DefaultTheme.qrc
+  Swift.qrc
 )
 
 
