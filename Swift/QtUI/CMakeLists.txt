@@ -163,6 +163,9 @@ set(SWIFT_SRCS
   QtVCardWidget/QtVCardURLField.cpp
   QtVCardWidget/QtVCardGeneralField.cpp
   QtVCardWidget/QtVCardWidget.cpp
+
+  #Resource files
+  DefaultTheme.qrc
 )
 
 
