@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <QList>
 
 #include <Swift/QtUI/ChatList/ChatListItem.h>
@@ -15,7 +16,7 @@ namespace Swift {
         public:
             ChatListGroupItem(const QString& name, ChatListGroupItem* parent, bool sorted = true) : ChatListItem(parent), name_(name), sorted_(sorted) {}
             virtual ~ChatListGroupItem() {clear();}
-            void addItem(ChatListItem* item) {items_.push_back(item); if (sorted_) {qStableSort(items_.begin(), items_.end(), pointerItemLessThan);}}
+      void addItem(ChatListItem* item) {items_.push_back(item); if (sorted_) {std::stable_sort(items_.begin(), items_.end(), pointerItemLessThan);}}
             void remove(int index) {items_.removeAt(index);}
             int rowCount() {return items_.size();}
             ChatListItem* item(int i) {return items_[i];}
