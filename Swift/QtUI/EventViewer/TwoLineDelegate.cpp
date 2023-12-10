@@ -9,44 +9,44 @@
 #include <QColor>
 #include <QPainter>
 #include <QPen>
+#include <qt5/QtCore/qnamespace.h>
 
 namespace Swift {
 
-namespace {
-    const QColor secondLineColor = QColor(160,160,160);
-}
+  namespace {
+    const QColor secondLineColor = QColor(160, 160, 160);
+  }
 
-TwoLineDelegate::TwoLineDelegate(int firstRole, int secondRole, bool wrap) {
+  TwoLineDelegate::TwoLineDelegate(int firstRole, int secondRole, bool wrap) {
     firstRole_ = firstRole;
     secondRole_ = secondRole;
     wrap_ = wrap;
-}
+  }
 
-TwoLineDelegate::~TwoLineDelegate() {
+  TwoLineDelegate::~TwoLineDelegate() {}
 
-}
-
-QSize TwoLineDelegate::sizeHint(const QStyleOptionViewItem& /*option*/, QtEvent* /*event*/ ) const {
+  QSize TwoLineDelegate::sizeHint(const QStyleOptionViewItem& /*option*/, QtEvent* /*event*/) const {
     QFontMetrics nameMetrics(common_.nameFont);
     QFontMetrics statusMetrics(common_.detailFont);
     int sizeByText = 2 * common_.verticalMargin + nameMetrics.height() + statusMetrics.height();
     return QSize(150, sizeByText);
-}
+  }
 
-void TwoLineDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, QtEvent* event) const {
+  void TwoLineDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, QtEvent* event) const {
     painter->save();
     QRect fullRegion(option.rect);
-    if ( option.state & QStyle::State_Selected ) {
-        painter->fillRect(fullRegion, option.palette.highlight());
-        painter->setPen(option.palette.highlightedText().color());
-    } else {
-        QColor nameColor = event->data(Qt::TextColorRole).value<QColor>();
-        painter->setPen(QPen(nameColor));
+    if (option.state & QStyle::State_Selected) {
+      painter->fillRect(fullRegion, option.palette.highlight());
+      painter->setPen(option.palette.highlightedText().color());
+    }
+    else {
+      QColor nameColor = event->data(Qt::ForegroundRole).value<QColor>();
+      painter->setPen(QPen(nameColor));
     }
 
     QFontMetrics nameMetrics(common_.nameFont);
     painter->setFont(common_.nameFont);
-    int extraFontWidth = nameMetrics.width("H");
+    int extraFontWidth = nameMetrics.boundingRect("H").width();
     int leftOffset = common_.horizontalMargin * 2 + extraFontWidth / 2;
     QRect textRegion(fullRegion.adjusted(leftOffset, 0, 0, 0));
 
@@ -62,6 +62,6 @@ void TwoLineDelegate::paint(QPainter* painter, const QStyleOptionViewItem& optio
     DelegateCommons::drawElidedText(painter, detailRegion, event->data(secondRole_).toString());
 
     painter->restore();
-}
+  }
 
-}
+} // namespace Swift

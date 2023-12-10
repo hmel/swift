@@ -12,30 +12,34 @@
 #include <Swift/QtUI/QtSwiftUtil.h>
 
 namespace Swift {
-ChatListRecentItem::ChatListRecentItem(const ChatListWindow::Chat& chat, ChatListGroupItem* parent) : ChatListItem(parent), chat_(chat) {
+  ChatListRecentItem::ChatListRecentItem(const ChatListWindow::Chat& chat, ChatListGroupItem* parent) : ChatListItem(parent), chat_(chat) {}
 
-}
-
-const ChatListWindow::Chat& ChatListRecentItem::getChat() const {
+  const ChatListWindow::Chat& ChatListRecentItem::getChat() const {
     return chat_;
-}
+  }
 
-QVariant ChatListRecentItem::data(int role) const {
+  QVariant ChatListRecentItem::data(int role) const {
     switch (role) {
-        case Qt::DisplayRole: return P2QSTRING(chat_.getTitle());
-        case DetailTextRole: return P2QSTRING(chat_.activity);
-        case Qt::TextColorRole: return QColor(89,89,89);
-        /*case Qt::BackgroundColorRole: return backgroundColor_;
+      case Qt::DisplayRole:
+        return P2QSTRING(chat_.getTitle());
+      case DetailTextRole:
+        return P2QSTRING(chat_.activity);
+      case Qt::ForegroundRole:
+        return QColor(89, 89, 89);
+      /*case Qt::BackgroundColorRole: return backgroundColor_;
         case Qt::ToolTipRole: return isContact() ? toolTipString() : QVariant();
         case StatusTextRole: return statusText_;*/
-        case AvatarRole: return QVariant(P2QSTRING(pathToString(chat_.avatarPath)));
-        case PresenceIconRole: return getPresenceIcon();
-        default: return QVariant();
+      case AvatarRole:
+        return QVariant(P2QSTRING(pathToString(chat_.avatarPath)));
+      case PresenceIconRole:
+        return getPresenceIcon();
+      default:
+        return QVariant();
     }
-}
+  }
 
-QIcon ChatListRecentItem::getPresenceIcon() const {
+  QIcon ChatListRecentItem::getPresenceIcon() const {
     return QIcon(statusShowTypeToIconPath(chat_.statusType));
-}
+  }
 
-}
+} // namespace Swift

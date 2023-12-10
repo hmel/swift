@@ -26,7 +26,7 @@
 
 namespace Swift {
 
-QtMUCSearchWindow::QtMUCSearchWindow() {
+  QtMUCSearchWindow::QtMUCSearchWindow() {
     ui_.setupUi(this);
 #ifndef Q_OS_MAC
     setWindowIcon(QIcon(":/logo-icon-16.png"));
@@ -47,7 +47,7 @@ QtMUCSearchWindow::QtMUCSearchWindow() {
     ui_.results_->sortByColumn(0, Qt::AscendingOrder);
     connect(ui_.searchButton_, SIGNAL(clicked()), this, SLOT(handleSearch()));
     connect(ui_.service_, SIGNAL(activated(const QString&)), this, SLOT(handleSearch(const QString&)));
-    connect(ui_.results_->selectionModel(), SIGNAL(selectionChanged (const QItemSelection&, const QItemSelection&)), this, SLOT(handleSelectionChanged (const QItemSelection&, const QItemSelection&)));
+    connect(ui_.results_->selectionModel(), SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)), this, SLOT(handleSelectionChanged(const QItemSelection&, const QItemSelection&)));
     connect(ui_.results_, SIGNAL(activated(const QModelIndex&)), this, SLOT(handleActivated(const QModelIndex&)));
     connect(ui_.results_, SIGNAL(activated(const QModelIndex&)), this, SLOT(handleActivated(const QModelIndex&)));
     // Not using a button box, because i can't seem to be able to make the ok button non-default (on mac)
@@ -63,17 +63,15 @@ QtMUCSearchWindow::QtMUCSearchWindow() {
     hasHadScrollBars_ = false;
     updateThrobberPosition();
     setSearchInProgress(false);
-}
+  }
 
-QtMUCSearchWindow::~QtMUCSearchWindow() {
+  QtMUCSearchWindow::~QtMUCSearchWindow() {}
 
-}
-
-void QtMUCSearchWindow::resizeEvent(QResizeEvent* /*event*/) {
+  void QtMUCSearchWindow::resizeEvent(QResizeEvent* /*event*/) {
     updateThrobberPosition();
-}
+  }
 
-void QtMUCSearchWindow::updateThrobberPosition() {
+  void QtMUCSearchWindow::updateThrobberPosition() {
     bool isShown = throbber_->isVisible();
     int resultWidth = ui_.results_->width();
     int resultHeight = ui_.results_->height();
@@ -87,107 +85,107 @@ void QtMUCSearchWindow::updateThrobberPosition() {
      */
     hasHadScrollBars_ |= ui_.results_->verticalScrollBar()->isVisible();
     int hMargin = hasHadScrollBars_ ? ui_.results_->verticalScrollBar()->width() + 2 : 2;
-    int vMargin = 2; /* We don't get horizontal scrollbars */
+    int vMargin = 2;                                                                                                                              /* We don't get horizontal scrollbars */
     throbber_->setGeometry(QRect(resultWidth - throbberWidth - hMargin, resultHeight - throbberHeight - vMargin, throbberWidth, throbberHeight)); /* include margins */
     throbber_->setVisible(isShown);
-}
+  }
 
-void QtMUCSearchWindow::addSavedServices(const std::list<JID>& services) {
+  void QtMUCSearchWindow::addSavedServices(const std::list<JID>& services) {
     ui_.service_->clear();
     for (const auto& jid : services) {
-        ui_.service_->addItem(P2QSTRING(jid.toString()));
+      ui_.service_->addItem(P2QSTRING(jid.toString()));
     }
     if (!services.empty()) {
-        ui_.service_->setEditText(P2QSTRING(services.begin()->toString()));
+      ui_.service_->setEditText(P2QSTRING(services.begin()->toString()));
     }
     else {
-        ui_.service_->clearEditText();
+      ui_.service_->clearEditText();
     }
-}
+  }
 
-void QtMUCSearchWindow::handleActivated(const QModelIndex& index) {
+  void QtMUCSearchWindow::handleActivated(const QModelIndex& index) {
     if (!index.isValid()) {
-        return;
+      return;
     }
     if (dynamic_cast<MUCSearchRoomItem*>(static_cast<MUCSearchItem*>(sortFilterProxyModel_->mapToSource(index).internalPointer()))) {
-        accept();
+      accept();
     }
-}
+  }
 
-void QtMUCSearchWindow::handleSearch() {
+  void QtMUCSearchWindow::handleSearch() {
     handleSearch(ui_.service_->currentText());
-}
+  }
 
-void QtMUCSearchWindow::handleSearch(const QString& service) {
+  void QtMUCSearchWindow::handleSearch(const QString& service) {
     if (!service.isEmpty()) {
-        onSearchService(JID(Q2PSTRING(service)));
+      onSearchService(JID(Q2PSTRING(service)));
     }
-}
+  }
 
-void QtMUCSearchWindow::handleFilterStringChanged(const QString& filterString) {
-    sortFilterProxyModel_->setFilterRegExp(filterString);
-}
+  void QtMUCSearchWindow::handleFilterStringChanged(const QString& filterString) {
+    sortFilterProxyModel_->setFilterRegularExpression(filterString);
+  }
 
-void QtMUCSearchWindow::show() {
+  void QtMUCSearchWindow::show() {
     ui_.filter_->clear();
     QWidget::show();
     QWidget::activateWindow();
-}
+  }
 
-void QtMUCSearchWindow::clearList() {
+  void QtMUCSearchWindow::clearList() {
     model_->clear();
-}
+  }
 
-void QtMUCSearchWindow::addService(const MUCService& service) {
+  void QtMUCSearchWindow::addService(const MUCService& service) {
     updateThrobberPosition();
     auto serviceItem = std::make_shared<MUCSearchServiceItem>(P2QSTRING(service.getJID().toString()));
     if (service.getRooms().size() > 0) {
-        std::vector<std::shared_ptr<MUCSearchItem>> rooms;
-        for (auto&& room : service.getRooms()) {
-            if (!room.getNode().empty()) {
-                rooms.push_back(std::make_shared<MUCSearchRoomItem>(P2QSTRING(room.getNode())));
-            }
+      std::vector<std::shared_ptr<MUCSearchItem>> rooms;
+      for (auto&& room : service.getRooms()) {
+        if (!room.getNode().empty()) {
+          rooms.push_back(std::make_shared<MUCSearchRoomItem>(P2QSTRING(room.getNode())));
         }
-        serviceItem->addRooms(rooms);
+      }
+      serviceItem->addRooms(rooms);
     }
     else {
-        serviceItem->addRoom(std::make_shared<MUCSearchEmptyItem>());
+      serviceItem->addRoom(std::make_shared<MUCSearchEmptyItem>());
     }
     model_->addService(serviceItem);
     ui_.results_->expandAll();
+  }
 
-}
-
-void QtMUCSearchWindow::setSearchInProgress(bool searching) {
+  void QtMUCSearchWindow::setSearchInProgress(bool searching) {
     if (searching) {
-        throbber_->movie()->start();
-    } else {
-        throbber_->movie()->stop();
-    }
-    throbber_->setVisible(searching);
-}
-
-void QtMUCSearchWindow::accept() {
-    MUCSearchRoomItem* room = getSelectedRoom();
-    if (room) {
-        onFinished(JID(Q2PSTRING(room->getNode()), Q2PSTRING(room->getParent()->getHost())));
+      throbber_->movie()->start();
     }
     else {
-        onFinished(boost::optional<JID>());
+      throbber_->movie()->stop();
+    }
+    throbber_->setVisible(searching);
+  }
+
+  void QtMUCSearchWindow::accept() {
+    MUCSearchRoomItem* room = getSelectedRoom();
+    if (room) {
+      onFinished(JID(Q2PSTRING(room->getNode()), Q2PSTRING(room->getParent()->getHost())));
+    }
+    else {
+      onFinished(boost::optional<JID>());
     }
     QDialog::accept();
-}
+  }
 
-void QtMUCSearchWindow::reject() {
+  void QtMUCSearchWindow::reject() {
     onFinished(boost::optional<JID>());
     QDialog::reject();
-}
+  }
 
-void QtMUCSearchWindow::handleSelectionChanged(const QItemSelection&, const QItemSelection&) {
+  void QtMUCSearchWindow::handleSelectionChanged(const QItemSelection&, const QItemSelection&) {
     ui_.okButton->setEnabled(getSelectedRoom());
-}
+  }
 
-MUCSearchRoomItem* QtMUCSearchWindow::getSelectedRoom() const {
+  MUCSearchRoomItem* QtMUCSearchWindow::getSelectedRoom() const {
     // Not using selectedIndexes(), because this seems to cause a crash in Qt (4.7.0) in the
     // QModelIndexList destructor.
     // This is a workaround posted in http://www.qtcentre.org/threads/16933 (although this case
@@ -195,20 +193,20 @@ MUCSearchRoomItem* QtMUCSearchWindow::getSelectedRoom() const {
     QItemSelection ranges = ui_.results_->selectionModel()->selection();
     QModelIndexList lstIndex;
     for (int i = 0; i < ranges.count(); ++i) {
-        QModelIndex parent = ranges.at(i).parent();
-        int right = ranges.at(i).model()->columnCount(parent) - 1;
-        if (ranges.at(i).left() == 0 && ranges.at(i).right() == right) {
-            for (int r = ranges.at(i).top(); r <= ranges.at(i).bottom(); ++r) {
-                lstIndex.append(ranges.at(i).model()->index(r, 0, parent));
-            }
+      QModelIndex parent = ranges.at(i).parent();
+      int right = ranges.at(i).model()->columnCount(parent) - 1;
+      if (ranges.at(i).left() == 0 && ranges.at(i).right() == right) {
+        for (int r = ranges.at(i).top(); r <= ranges.at(i).bottom(); ++r) {
+          lstIndex.append(ranges.at(i).model()->index(r, 0, parent));
         }
+      }
     }
     if (lstIndex.isEmpty()) {
-        return nullptr;
+      return nullptr;
     }
     else {
-        return dynamic_cast<MUCSearchRoomItem*>(static_cast<MUCSearchItem*>(sortFilterProxyModel_->mapToSource(lstIndex.first()).internalPointer()));
+      return dynamic_cast<MUCSearchRoomItem*>(static_cast<MUCSearchItem*>(sortFilterProxyModel_->mapToSource(lstIndex.first()).internalPointer()));
     }
-}
+  }
 
-}
+} // namespace Swift

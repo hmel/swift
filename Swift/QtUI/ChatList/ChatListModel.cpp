@@ -8,6 +8,7 @@
 
 #include <QMimeData>
 #include <QUrl>
+#include <QIODevice>
 
 #include <Swift/QtUI/ChatList/ChatListMUCItem.h>
 #include <Swift/QtUI/ChatList/ChatListRecentItem.h>
@@ -16,7 +17,7 @@
 
 namespace Swift {
 
-ChatListModel::ChatListModel() : whiteboards_(nullptr) {
+  ChatListModel::ChatListModel() : whiteboards_(nullptr) {
     root_ = new ChatListGroupItem("", nullptr, false);
     mucBookmarks_ = new ChatListGroupItem(tr("Bookmarked Rooms"), root_);
     recents_ = new ChatListGroupItem(tr("Recent Chats"), root_, false);
@@ -30,84 +31,86 @@ ChatListModel::ChatListModel() : whiteboards_(nullptr) {
 
     QModelIndex idx = index(0, 0, QModelIndex());
     while (idx.isValid()) {
-        if (idx.internalPointer() == mucBookmarks_) {
-            mucBookmarksIndex_ = idx;
-        } else if (idx.internalPointer() == recents_) {
-            recentsIndex_ = idx;
-        } else if (idx.internalPointer() == whiteboards_) {
-            whiteboardsIndex_ = idx;
-        }
-        idx = index(idx.row() + 1, 0, QModelIndex());
+      if (idx.internalPointer() == mucBookmarks_) {
+        mucBookmarksIndex_ = idx;
+      }
+      else if (idx.internalPointer() == recents_) {
+        recentsIndex_ = idx;
+      }
+      else if (idx.internalPointer() == whiteboards_) {
+        whiteboardsIndex_ = idx;
+      }
+      idx = index(idx.row() + 1, 0, QModelIndex());
     }
-}
+  }
 
-Qt::ItemFlags ChatListModel::flags(const QModelIndex& index) const {
+  Qt::ItemFlags ChatListModel::flags(const QModelIndex& index) const {
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
     if (dynamic_cast<ChatListRecentItem*>(getItemForIndex(index))) {
-        flags |= Qt::ItemIsDragEnabled;
+      flags |= Qt::ItemIsDragEnabled;
     }
     return flags;
-}
+  }
 
-void ChatListModel::clearBookmarks() {
+  void ChatListModel::clearBookmarks() {
     beginRemoveRows(mucBookmarksIndex_, 0, mucBookmarks_->rowCount());
     mucBookmarks_->clear();
     endRemoveRows();
-}
+  }
 
-void ChatListModel::addMUCBookmark(const Swift::MUCBookmark& bookmark) {
+  void ChatListModel::addMUCBookmark(const Swift::MUCBookmark& bookmark) {
     beginInsertRows(mucBookmarksIndex_, 0, mucBookmarks_->rowCount());
     mucBookmarks_->addItem(new ChatListMUCItem(bookmark, mucBookmarks_));
     endInsertRows();
-}
+  }
 
-void ChatListModel::removeMUCBookmark(const Swift::MUCBookmark& bookmark) {
+  void ChatListModel::removeMUCBookmark(const Swift::MUCBookmark& bookmark) {
     for (int i = 0; i < mucBookmarks_->rowCount(); i++) {
-        ChatListMUCItem* item = dynamic_cast<ChatListMUCItem*>(mucBookmarks_->item(i));
-        if (item->getBookmark() == bookmark) {
-            beginRemoveRows(mucBookmarksIndex_, i, i+1);
-            mucBookmarks_->remove(i);
-            endRemoveRows();
-            break;
-        }
+      ChatListMUCItem* item = dynamic_cast<ChatListMUCItem*>(mucBookmarks_->item(i));
+      if (item->getBookmark() == bookmark) {
+        beginRemoveRows(mucBookmarksIndex_, i, i + 1);
+        mucBookmarks_->remove(i);
+        endRemoveRows();
+        break;
+      }
     }
-}
+  }
 
-void ChatListModel::addWhiteboardSession(const ChatListWindow::Chat& chat) {
+  void ChatListModel::addWhiteboardSession(const ChatListWindow::Chat& chat) {
     beginInsertRows(whiteboardsIndex_, 0, whiteboards_->rowCount());
     whiteboards_->addItem(new ChatListWhiteboardItem(chat, whiteboards_));
     endInsertRows();
-}
+  }
 
-void ChatListModel::removeWhiteboardSession(const JID& jid) {
+  void ChatListModel::removeWhiteboardSession(const JID& jid) {
     for (int i = 0; i < whiteboards_->rowCount(); i++) {
-        ChatListWhiteboardItem* item = dynamic_cast<ChatListWhiteboardItem*>(whiteboards_->item(i));
-        if (item->getChat().jid == jid) {
-            beginRemoveRows(whiteboardsIndex_, i, i+1);
-            whiteboards_->remove(i);
-            endRemoveRows();
-            break;
-        }
+      ChatListWhiteboardItem* item = dynamic_cast<ChatListWhiteboardItem*>(whiteboards_->item(i));
+      if (item->getChat().jid == jid) {
+        beginRemoveRows(whiteboardsIndex_, i, i + 1);
+        whiteboards_->remove(i);
+        endRemoveRows();
+        break;
+      }
     }
-}
+  }
 
-void ChatListModel::setRecents(const std::list<ChatListWindow::Chat>& recents) {
+  void ChatListModel::setRecents(const std::list<ChatListWindow::Chat>& recents) {
     beginRemoveRows(recentsIndex_, 0, recents_->rowCount());
     recents_->clear();
     endRemoveRows();
     beginInsertRows(recentsIndex_, 0, recents.size());
     for (const auto& chat : recents) {
-        recents_->addItem(new ChatListRecentItem(chat, recents_));
-//whiteboards_->addItem(new ChatListRecentItem(chat, whiteboards_));
+      recents_->addItem(new ChatListRecentItem(chat, recents_));
+      //whiteboards_->addItem(new ChatListRecentItem(chat, whiteboards_));
     }
     endInsertRows();
-}
+  }
 
-QMimeData* ChatListModel::mimeData(const QModelIndexList& indexes) const {
+  QMimeData* ChatListModel::mimeData(const QModelIndexList& indexes) const {
     QMimeData* data = QAbstractItemModel::mimeData(indexes);
-    ChatListRecentItem *item = dynamic_cast<ChatListRecentItem*>(getItemForIndex(indexes.first()));
+    ChatListRecentItem* item = dynamic_cast<ChatListRecentItem*>(getItemForIndex(indexes.first()));
     if (item == nullptr) {
-        return data;
+      return data;
     }
 
     QByteArray itemData;
@@ -116,72 +119,74 @@ QMimeData* ChatListModel::mimeData(const QModelIndexList& indexes) const {
 
     QString mimeType = "application/vnd.swift.contact-jid-list";
     if (!chat.impromptuJIDs.size()) {
-        if (chat.isMUC) {
-            mimeType = "application/vnd.swift.contact-jid-muc";
-        }
-        dataStream << P2QSTRING(chat.jid.toString());
-    } else {
-         for (const auto& jid : chat.impromptuJIDs) {
-            dataStream << P2QSTRING(jid.second.toString());
-        }
+      if (chat.isMUC) {
+        mimeType = "application/vnd.swift.contact-jid-muc";
+      }
+      dataStream << P2QSTRING(chat.jid.toString());
+    }
+    else {
+      for (const auto& jid : chat.impromptuJIDs) {
+        dataStream << P2QSTRING(jid.second.toString());
+      }
     }
 
     data->setData(mimeType, itemData);
     return data;
-}
+  }
 
-const ChatListMUCItem* ChatListModel::getChatListMUCItem(const JID& roomJID) const {
+  const ChatListMUCItem* ChatListModel::getChatListMUCItem(const JID& roomJID) const {
     const ChatListMUCItem* mucItem = nullptr;
     for (int i = 0; i < mucBookmarks_->rowCount(); i++) {
-        ChatListMUCItem* item = dynamic_cast<ChatListMUCItem*>(mucBookmarks_->item(i));
-        if (item->getBookmark().getRoom() == roomJID) {
-            mucItem = item;
-            break;
-        }
+      ChatListMUCItem* item = dynamic_cast<ChatListMUCItem*>(mucBookmarks_->item(i));
+      if (item->getBookmark().getRoom() == roomJID) {
+        mucItem = item;
+        break;
+      }
     }
     return mucItem;
-}
+  }
 
-int ChatListModel::columnCount(const QModelIndex& /*parent*/) const {
+  int ChatListModel::columnCount(const QModelIndex& /*parent*/) const {
     return 1;
-}
+  }
 
-ChatListItem* ChatListModel::getItemForIndex(const QModelIndex& index) const {
+  ChatListItem* ChatListModel::getItemForIndex(const QModelIndex& index) const {
     return index.isValid() ? static_cast<ChatListItem*>(index.internalPointer()) : nullptr;
-}
+  }
 
-QVariant ChatListModel::data(const QModelIndex& index, int role) const {
+  QVariant ChatListModel::data(const QModelIndex& index, int role) const {
     ChatListItem* item = getItemForIndex(index);
     return item ? item->data(role) : QVariant();
-}
+  }
 
-QModelIndex ChatListModel::index(int row, int column, const QModelIndex & parent) const {
+  QModelIndex ChatListModel::index(int row, int column, const QModelIndex& parent) const {
     if (!hasIndex(row, column, parent)) {
-        return QModelIndex();
+      return QModelIndex();
     }
 
-    ChatListGroupItem *parentItem = parent.isValid() ? static_cast<ChatListGroupItem*>(parent.internalPointer()) : root_;
+    ChatListGroupItem* parentItem = parent.isValid() ? static_cast<ChatListGroupItem*>(parent.internalPointer()) : root_;
 
     return row < parentItem->rowCount() ? createIndex(row, column, parentItem->item(row)) : QModelIndex();
-}
+  }
 
-QModelIndex ChatListModel::parent(const QModelIndex& index) const {
+  QModelIndex ChatListModel::parent(const QModelIndex& index) const {
     if (!index.isValid()) {
-        return QModelIndex();
+      return QModelIndex();
     }
     ChatListGroupItem* parent = static_cast<ChatListGroupItem*>(index.internalPointer())->parent();
     return (parent == root_) ? QModelIndex() : createIndex(parent->parent()->row(parent), 0, parent);
-}
+  }
 
-int ChatListModel::rowCount(const QModelIndex& parentIndex) const {
+  int ChatListModel::rowCount(const QModelIndex& parentIndex) const {
     ChatListGroupItem* parent = nullptr;
     if (parentIndex.isValid()) {
-        parent = dynamic_cast<ChatListGroupItem*>(static_cast<ChatListItem*>(parentIndex.internalPointer()));
-    } else {
-        parent = root_;
+      parent = dynamic_cast<ChatListGroupItem*>(static_cast<ChatListItem*>(parentIndex.internalPointer()));
+    }
+    else {
+      parent = root_;
     }
     int count = (parent ? parent->rowCount() : 0);
     return count;
-}
+  }
 
-}
+} // namespace Swift

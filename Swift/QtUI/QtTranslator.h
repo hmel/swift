@@ -29,9 +29,10 @@ public:
   virtual std::string ptimeToHumanReadableString(const boost::posix_time::ptime& time) {
     QLocale loc = QLocale::system();
     loc.dateTimeFormat();
-    auto t = QDateTime::fromTime_t(posixTimeToTimeT(time));
+    auto t = QDateTime::fromSecsSinceEpoch(posixTimeToTimeT(time));
     QString qstr = loc.toString(t);
-    std::string prev = Q2PSTRING(QDateTime::fromTime_t(posixTimeToTimeT(time)).toString(Qt::SystemLocaleLongDate));
+    //std::string prev = Q2PSTRING(QDateTime::fromSecsSinceEpoch(posixTimeToTimeT(time)).toString(Qt::SystemLocaleLongDate));
+    std::string prev = Q2PSTRING(QDateTime::fromSecsSinceEpoch(posixTimeToTimeT(time)).toString(Qt::TextDate));
     Q_ASSERT(prev == qstr.toStdString());
     return qstr.toStdString();
   }

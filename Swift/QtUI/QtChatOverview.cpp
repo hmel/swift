@@ -18,11 +18,11 @@
 
 namespace Swift {
 
-QtChatOverview::QtChatOverview(Chattables& chattables, QWidget* parent) : QWidget(parent), chattables_(chattables) {
+  QtChatOverview::QtChatOverview(Chattables& chattables, QWidget* parent) : QWidget(parent), chattables_(chattables) {
     QPalette newPalette = palette();
-    newPalette.setColor(QPalette::Background, {38, 81, 112});
+    newPalette.setColor(QPalette::Window, {38, 81, 112});
     setAutoFillBackground(true);
-    newPalette.setColor(QPalette::Foreground, {255, 255, 255});
+    newPalette.setColor(QPalette::WindowText, {255, 255, 255});
     setPalette(newPalette);
 
     auto mainLayout = new QVBoxLayout();
@@ -55,12 +55,12 @@ QtChatOverview::QtChatOverview(Chattables& chattables, QWidget* parent) : QWidge
     mainLayout->addWidget(roomsBundle);
 
     mainLayout->addStretch();
-}
+  }
 
-QtChatOverview::~QtChatOverview() {}
+  QtChatOverview::~QtChatOverview() {}
 
-void QtChatOverview::handleItemClicked(JID jid) {
+  void QtChatOverview::handleItemClicked(JID jid) {
     chattables_.onActivated(jid);
-}
+  }
 
 } // namespace Swift

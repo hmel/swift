@@ -176,7 +176,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5 REQUIRED COMPONENTS Core Gui X11Extras DBus Widgets WebKitWidgets Multimedia Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui DBus Widgets Multimedia Svg WebEngineWidgets)
 find_package(Boost REQUIRED COMPONENTS program_options filesystem serialization regex)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(IDN REQUIRED IMPORTED_TARGET libidn)
@@ -189,7 +189,7 @@ endif()
 
 add_executable(Swift ${SWIFT_SRCS})
 
-target_link_libraries(Swift Qt5::Core Qt5::Gui Qt5::DBus Qt5::X11Extras Qt5::Widgets Qt5::WebKitWidgets Qt5::Multimedia
+target_link_libraries(Swift Qt6::Core Qt6::Gui Qt6::DBus Qt6::WebEngineWidgets Qt6::Widgets Qt6::Multimedia
   swift_controllers
   swift_tools
   swiften

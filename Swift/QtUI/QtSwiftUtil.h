@@ -11,4 +11,4 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#define B2QDATE(a) QDateTime::fromTime_t((a - boost::posix_time::from_time_t(0)).total_seconds())
+#define B2QDATE(a) QDateTime::fromSecsSinceEpoch((a - boost::posix_time::from_time_t(0)).total_seconds())

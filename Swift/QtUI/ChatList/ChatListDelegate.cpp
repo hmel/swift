@@ -98,7 +98,8 @@ namespace Swift {
 
     QFontMetrics nameMetrics(common_.nameFont);
     painter->setFont(common_.nameFont);
-    int extraFontWidth = nameMetrics.width("H");
+    //int extraFontWidth = nameMetrics.width("H");
+    int extraFontWidth = nameMetrics.boundingRect("H").width();
     int leftOffset = common_.horizontalMargin * 2 + extraFontWidth / 2;
     QRect textRegion(fullRegion.adjusted(leftOffset, 0, 0, 0));
 
@@ -117,7 +118,7 @@ namespace Swift {
   }
 
   void ChatListDelegate::paintRecent(QPainter* painter, const QStyleOptionViewItem& option, ChatListRecentItem* item) const {
-    QColor nameColor = item->data(Qt::TextColorRole).value<QColor>();
+    QColor nameColor = item->data(Qt::ForegroundRole).value<QColor>();
     QString avatarPath;
     if (item->data(ChatListRecentItem::AvatarRole).isValid() && !item->data(ChatListRecentItem::AvatarRole).value<QString>().isNull()) {
       avatarPath = item->data(ChatListRecentItem::AvatarRole).value<QString>();
@@ -130,7 +131,7 @@ namespace Swift {
   }
 
   void ChatListDelegate::paintWhiteboard(QPainter* painter, const QStyleOptionViewItem& option, ChatListWhiteboardItem* item) const {
-    QColor nameColor = item->data(Qt::TextColorRole).value<QColor>();
+    QColor nameColor = item->data(Qt::ForegroundRole).value<QColor>();
     QString avatarPath;
     if (item->data(ChatListWhiteboardItem::AvatarRole).isValid() && !item->data(ChatListWhiteboardItem::AvatarRole).value<QString>().isNull()) {
       avatarPath = item->data(ChatListWhiteboardItem::AvatarRole).value<QString>();
