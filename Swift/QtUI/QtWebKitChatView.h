@@ -11,6 +11,7 @@
 #include <QList>
 #include <QString>
 #include <QWidget>
+#include <QWebEnginePage>
 
 #include <Swift/Controllers/UIInterfaces/ChatWindow.h>
 
@@ -155,7 +156,7 @@ namespace Swift {
     bool topMessageAdded_;
     int scrollBarMaximum_;
     QtWebView* webView_;
-    QWebPage* webPage_;
+    QWebEnginePage* webPage_;
     int fontSizeSteps_;
     QtChatTheme* theme_;
     //QWebElement lineSeparator_;

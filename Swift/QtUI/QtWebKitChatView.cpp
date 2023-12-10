@@ -8,7 +8,6 @@
 
 #include <QApplication>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QEventLoop>
 #include <QFile>
 #include <QFileDevice>
@@ -20,9 +19,9 @@
 #include <QStackedWidget>
 #include <QTimer>
 #include <QVBoxLayout>
-#include <QWebEngineFrame>
 #include <QWebEngineSettings>
 #include <QtDebug>
+#include <QString>
 
 #include <Swiften/Base/FileSize.h>
 #include <Swiften/Base/Log.h>
@@ -41,6 +40,8 @@
 #include <Swift/QtUI/QtUtilities.h>
 #include <Swift/QtUI/QtWebView.h>
 #include <Swift/QtUI/SystemMessageSnippet.h>
+
+class QWebElement {};
 
 namespace Swift {
 
@@ -88,11 +89,13 @@ namespace Swift {
     setAcceptDrops(true);
 #endif
 
-    webPage_ = new QWebPage(this);
+    webPage_ = new QWebEnginePage(this);
+    /*
     webPage_->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     if (Log::getLogLevel() == Log::debug) {
       webPage_->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
     }
+    */
     webView_->setPage(webPage_);
     connect(webPage_, SIGNAL(selectionChanged()), SLOT(copySelectionToClipboard()));
 
@@ -130,6 +133,7 @@ namespace Swift {
   }
 
   void QtWebKitChatView::addMessageBottom(std::shared_ptr<ChatSnippet> snippet) {
+#if 0
     if (viewReady_) {
       addToDOM(snippet);
     }
@@ -137,6 +141,7 @@ namespace Swift {
       /* If this asserts, the previous queuing code was necessary and should be reinstated */
       assert(false);
     }
+#endif //0
   }
 
   void QtWebKitChatView::addMessageTop(std::shared_ptr<ChatSnippet> /* snippet */) {
@@ -148,9 +153,11 @@ namespace Swift {
     //qDebug() << snippet->getContent();
     rememberScrolledToBottom();
 
+    /*
     QWebEngineElement insertElement = webPage_->mainFrame()->findFirstElement("#insert");
     assert(!insertElement.isNull());
     insertElement.prependOutside(snippet->getContent());
+    */
 
     //qDebug() << "-----------------";
     //qDebug() << webPage_->mainFrame()->toHtml();
@@ -158,6 +165,7 @@ namespace Swift {
 
   void QtWebKitChatView::addLastSeenLine() {
     // Remove a potentially existing unread bar.
+    /*
     QWebElement existingUnreadBar = webPage_->mainFrame()->findFirstElement("div.unread");
     if (!existingUnreadBar.isNull()) {
       existingUnreadBar.removeFromDocument();
@@ -165,10 +173,12 @@ namespace Swift {
 
     QWebElement insertElement = webPage_->mainFrame()->findFirstElement("#insert");
     insertElement.prependOutside(theme_->getUnread());
+    */
   }
 
   void QtWebKitChatView::replaceLastMessage(const QString& newMessage, const ChatWindow::TimestampBehaviour timestampBehaviour) {
     rememberScrolledToBottom();
+    /*
     QWebElement insertElement = webPage_->mainFrame()->findFirstElement("#insert");
     assert(!insertElement.isNull());
 
@@ -181,26 +191,31 @@ namespace Swift {
       assert(!timeChild.isNull());
       timeChild.setInnerXml(ChatSnippet::timeToEscapedString(QDateTime::currentDateTime()));
     }
+    */
   }
 
   void QtWebKitChatView::replaceLastMessage(const QString& newMessage, const QString& note) {
     rememberScrolledToBottom();
+    /*
     replaceLastMessage(newMessage, ChatWindow::KeepTimestamp);
     QWebElement replace = lastElement_.findFirst("span.swift_time");
     assert(!replace.isNull());
     replace.setInnerXml(ChatSnippet::escape(note));
+    */
   }
 
   QString QtWebKitChatView::getLastSentMessage() {
-    return lastElement_.toPlainText();
+    //return lastElement_.toPlainText();
+    return {};
   }
 
   void QtWebKitChatView::addToJSEnvironment(const QString& name, QObject* obj) {
-    webView_->page()->currentFrame()->addToJavaScriptWindowObject(name, obj);
+    //webView_->page()->currentFrame()->addToJavaScriptWindowObject(name, obj);
   }
 
   void QtWebKitChatView::replaceMessage(const QString& newMessage, const QString& id, const QDateTime& editTime) {
     rememberScrolledToBottom();
+    /*
     QWebElement message = document_.findFirst("#" + id);
     if (!message.isNull()) {
       QWebElement replaceContent = message.findFirst("span.swift_inner_message");
@@ -215,10 +230,12 @@ namespace Swift {
     else {
       qWarning() << "Trying to replace element with id " << id << " but it's not there.";
     }
+    */
   }
 
   void QtWebKitChatView::showEmoticons(bool show) {
     showEmoticons_ = show;
+    /*
     {
       const QWebElementCollection spans = document_.findAll("span.swift_emoticon_image");
       Q_FOREACH (QWebElement span, spans) {
@@ -231,15 +248,19 @@ namespace Swift {
         span.setStyleProperty("display", show ? "none" : "inline");
       }
     }
+    */
   }
 
   void QtWebKitChatView::copySelectionToClipboard() {
+    /*
     if (!webPage_->selectedText().isEmpty()) {
       webPage_->triggerAction(QWebPage::Copy);
     }
+    */
   }
 
   void QtWebKitChatView::setAckXML(const QString& id, const QString& xml) {
+#if 0
     QWebElement message = document_.findFirst("#" + id);
     /* Deliberately not asserting here, so that when we start expiring old messages it won't hit us */
     if (message.isNull())
@@ -247,39 +268,50 @@ namespace Swift {
     QWebElement ackElement = message.findFirst("span.swift_ack");
     assert(!ackElement.isNull());
     ackElement.setInnerXml(xml);
+#endif //0
   }
 
   void QtWebKitChatView::setReceiptXML(const QString& id, const QString& xml) {
+    /*
     QWebElement message = document_.findFirst("#" + id);
     if (message.isNull())
       return;
     QWebElement receiptElement = message.findFirst("span.swift_receipt");
     assert(!receiptElement.isNull());
     receiptElement.setInnerXml(xml);
+    */
   }
 
   void QtWebKitChatView::displayReceiptInfo(const QString& id, bool showIt) {
+    /*
     QWebElement message = document_.findFirst("#" + id);
     if (message.isNull())
       return;
     QWebElement receiptElement = message.findFirst("span.swift_receipt");
     assert(!receiptElement.isNull());
     receiptElement.setStyleProperty("display", showIt ? "inline" : "none");
+    */
   }
 
   void QtWebKitChatView::rememberScrolledToBottom() {
+    /*
     if (webPage_) {
       isAtBottom_ = webPage_->mainFrame()->scrollBarValue(Qt::Vertical) >= (webPage_->mainFrame()->scrollBarMaximum(Qt::Vertical) - 1);
     }
+    */
   }
 
   void QtWebKitChatView::scrollToBottom() {
+#if 0
     isAtBottom_ = true;
     webPage_->mainFrame()->setScrollBarValue(Qt::Vertical, webPage_->mainFrame()->scrollBarMaximum(Qt::Vertical));
     webView_->update(); /* Work around redraw bug in some versions of Qt. */
+
+#endif //0
   }
 
   void QtWebKitChatView::handleFrameSizeChanged() {
+#if 0
     if (topMessageAdded_) {
       // adjust new scrollbar position
       int newMaximum = webPage_->mainFrame()->scrollBarMaximum(Qt::Vertical);
@@ -290,6 +322,7 @@ namespace Swift {
     if (isAtBottom_ && !disableAutoScroll_) {
       scrollToBottom();
     }
+#endif //0
   }
 
   void QtWebKitChatView::handleLinkClicked(const QUrl& url) {
@@ -316,6 +349,7 @@ namespace Swift {
   }
 
   void QtWebKitChatView::resizeFont(int fontSizeSteps) {
+#if 0
     fontSizeSteps_ = fontSizeSteps;
     double size = minimalFontScaling + 0.1 * fontSizeSteps_;
     QString sizeString(QString().setNum(size, 'g', 3) + "em");
@@ -325,9 +359,11 @@ namespace Swift {
     assert(!resizableTextStyle.isNull());
     resizableTextStyle.setInnerXml(QString("span.swift_resizable { font-size: %1;}").arg(sizeString));
     webView_->setFontSizeIsMinimal(size == minimalFontScaling);
+#endif //0
   }
 
   void QtWebKitChatView::resetView() {
+#if 0
     lastElement_ = QWebElement();
     firstElement_ = lastElement_;
     topMessageAdded_ = false;
@@ -370,20 +406,24 @@ namespace Swift {
     // In the future, when we enable dpiawareness on windows, this can be reverted.
     body.setStyleProperty("font-weight", QString("500"));
 #endif // Q_OS_WIN
+#endif //0
   }
 
   static QWebElement findElementWithID(QWebElement document, QString elementName, QString id) {
+#if 0
     QWebElementCollection elements = document.findAll(elementName);
     Q_FOREACH (QWebElement element, elements) {
       if (element.attribute("id") == id) {
         return element;
       }
     }
+#endif //0
     return QWebElement();
   }
 
   void QtWebKitChatView::setFileTransferProgress(QString id, const int percentageDone) {
     rememberScrolledToBottom();
+#if 0
     QWebElement ftElement = findElementWithID(document_, "div", id);
     if (ftElement.isNull()) {
       SWIFT_LOG(debug) << "Tried to access FT UI via invalid id!";
@@ -394,10 +434,12 @@ namespace Swift {
 
     QWebElement progressBarValue = ftElement.findFirst("div.progressbar-value");
     progressBarValue.setInnerXml(QString::number(percentageDone) + " %");
+#endif //0
   }
 
   void QtWebKitChatView::setFileTransferStatus(QString id, const ChatWindow::FileTransferState state, const QString& /* msg */) {
     rememberScrolledToBottom();
+#if 0
     QWebElement ftElement = findElementWithID(document_, "div", id);
     if (ftElement.isNull()) {
       SWIFT_LOG(debug) << "Tried to access FT UI via invalid id! id = " << Q2PSTRING(id);
@@ -444,9 +486,11 @@ namespace Swift {
     }
 
     ftElement.setInnerXml(newInnerHTML);
+#endif //0
   }
 
   void QtWebKitChatView::setWhiteboardSessionStatus(QString id, const ChatWindow::WhiteboardSessionState state) {
+#if 0
     QWebElement divElement = findElementWithID(document_, "div", id);
     QString newInnerHTML;
     if (state == ChatWindow::WhiteboardAccepted) {
@@ -459,14 +503,17 @@ namespace Swift {
       newInnerHTML = tr("Whiteboard chat request has been rejected");
     }
     divElement.setInnerXml(newInnerHTML);
+#endif //0
   }
 
   void QtWebKitChatView::setMUCInvitationJoined(QString id) {
+#if 0
     QWebElement divElement = findElementWithID(document_, "div", id);
     QWebElement buttonElement = findElementWithID(divElement, "input", "mucinvite");
     if (!buttonElement.isNull()) {
       buttonElement.setAttribute("value", tr("Return to room"));
     }
+#endif //0
   }
 
   void QtWebKitChatView::askDesktopToOpenFile(const QString& filename) {
@@ -477,9 +524,11 @@ namespace Swift {
   }
 
   int QtWebKitChatView::getSnippetPositionByDate(const QDate& date) {
+#if 0
     QWebElement message = webPage_->mainFrame()->documentElement().findFirst(".date" + date.toString(Qt::ISODate));
 
     return message.geometry().top();
+#endif //0
   }
 
   void QtWebKitChatView::resetTopInsertPoint() {
@@ -588,8 +637,8 @@ namespace Swift {
   }
 
   QString QtWebKitChatView::buildChatWindowButton(const QString& name, const QString& id, const QString& arg1, const QString& arg2, const QString& arg3, const QString& arg4, const QString& arg5) {
-    QRegExp regex("[A-Za-z][A-Za-z0-9\\-\\_]+");
-    Q_ASSERT(regex.exactMatch(id));
+    QRegularExpression regex("[A-Za-z][A-Za-z0-9\\-\\_]+");
+    Q_ASSERT(regex.match(id).hasMatch());
     QString html = QString("<input id='%2' type='submit' value='%1' onclick='chatwindow.buttonClicked(\"%2\", \"%3\", \"%4\", \"%5\", \"%6\", \"%7\");' />").arg(name).arg(id).arg(encodeButtonArgument(arg1)).arg(encodeButtonArgument(arg2)).arg(encodeButtonArgument(arg3)).arg(encodeButtonArgument(arg4)).arg(encodeButtonArgument(arg5));
     return html;
   }
@@ -697,6 +746,7 @@ namespace Swift {
   }
 
   void QtWebKitChatView::setFileTransferWarning(QString id, QString warningText) {
+#if 0
     QWebElement ftElement = findElementWithID(document_, "div", id);
     if (ftElement.isNull()) {
       SWIFT_LOG(debug) << "Tried to access FT UI via invalid id! id = " << Q2PSTRING(id);
@@ -705,9 +755,11 @@ namespace Swift {
 
     removeFileTransferWarning(id);
     ftElement.appendInside(QString("<div class='ft_warning' style='color: red;'><br/>%1</div>").arg(QtUtilities::htmlEscape(warningText)));
+#endif //0
   }
 
   void QtWebKitChatView::removeFileTransferWarning(QString id) {
+#if 0
     QWebElement ftElement = findElementWithID(document_, "div", id);
     if (ftElement.isNull()) {
       SWIFT_LOG(debug) << "Tried to access FT UI via invalid id! id = " << Q2PSTRING(id);
@@ -718,9 +770,11 @@ namespace Swift {
     if (!warningElement.isNull()) {
       warningElement.removeFromDocument();
     }
+#endif //0
   }
 
   void QtWebKitChatView::handleHTMLButtonClicked(QString id, QString encodedArgument1, QString encodedArgument2, QString encodedArgument3, QString encodedArgument4, QString encodedArgument5) {
+#if 0
     QString arg1 = decodeButtonArgument(encodedArgument1);
     QString arg2 = decodeButtonArgument(encodedArgument2);
     QString arg3 = decodeButtonArgument(encodedArgument3);
@@ -803,6 +857,7 @@ namespace Swift {
     else {
       SWIFT_LOG(debug) << "Unknown HTML button! ( " << Q2PSTRING(id) << " )";
     }
+#endif //0
   }
 
   void QtWebKitChatView::handleVerticalScrollBarPositionChanged(double position) {
@@ -855,6 +910,7 @@ namespace Swift {
 
   void QtWebKitChatView::replaceSystemMessage(const QString& newMessage, const QString& id, const ChatWindow::TimestampBehaviour timestampBehaviour) {
     rememberScrolledToBottom();
+#if 0
     QWebElement message = document_.findFirst("#" + id);
     if (!message.isNull()) {
       QWebElement replaceContent = message.findFirst("span.swift_message");
@@ -871,6 +927,7 @@ namespace Swift {
     else {
       qWarning() << "Trying to replace element with id " << id << " but it's not there.";
     }
+#endif //0
   }
 
   void QtWebKitChatView::replaceMessage(const QString& message, const std::string& id, const boost::posix_time::ptime& time, const QString& style, const HighlightAction& highlight) {

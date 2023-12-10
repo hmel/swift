@@ -13,14 +13,13 @@
 #include <Swift/QtUI/QtVCardWidget/QtVCardPhotoAndNameFields.h>
 
 #include <QMenu>
+#include <QRegularExpression>
 
 #include <Swift/QtUI/QtVCardWidget/ui_QtVCardPhotoAndNameFields.h>
 
 namespace Swift {
 
-QtVCardPhotoAndNameFields::QtVCardPhotoAndNameFields(QWidget* parent) :
-    QWidget(parent),
-    ui(new Ui::QtVCardPhotoAndNameFields) {
+  QtVCardPhotoAndNameFields::QtVCardPhotoAndNameFields(QWidget* parent) : QWidget(parent), ui(new Ui::QtVCardPhotoAndNameFields) {
     ui->setupUi(this);
     ui->lineEditPREFIX->hide();
     ui->lineEditMIDDLE->hide();
@@ -42,17 +41,17 @@ QtVCardPhotoAndNameFields::QtVCardPhotoAndNameFields(QWidget* parent) :
 #endif
 
     setEditable(false);
-}
+  }
 
-QtVCardPhotoAndNameFields::~QtVCardPhotoAndNameFields() {
+  QtVCardPhotoAndNameFields::~QtVCardPhotoAndNameFields() {
     delete ui;
-}
+  }
 
-bool QtVCardPhotoAndNameFields::isEditable() const {
+  bool QtVCardPhotoAndNameFields::isEditable() const {
     return editable;
-}
+  }
 
-void QtVCardPhotoAndNameFields::setEditable(bool editable) {
+  void QtVCardPhotoAndNameFields::setEditable(bool editable) {
     this->editable = editable;
 
     ui->avatarWidget->setEditable(editable);
@@ -74,79 +73,79 @@ void QtVCardPhotoAndNameFields::setEditable(bool editable) {
     fullname << ui->lineEditPREFIX->text() << ui->lineEditGIVEN->text() << ui->lineEditMIDDLE->text();
     fullname << ui->lineEditFAMILY->text() << ui->lineEditSUFFIX->text();
     for (auto& i : fullname) {
-        i = i.trimmed();
+      i = i.trimmed();
     }
-    ui->labelFULLNAME->setText((fullname.filter(QRegExp(".+"))).join(" "));
-}
+    ui->labelFULLNAME->setText((fullname.filter(QRegularExpression(".+"))).join(" "));
+  }
 
-void QtVCardPhotoAndNameFields::setAvatar(const ByteArray &data, const std::string &type) {
+  void QtVCardPhotoAndNameFields::setAvatar(const ByteArray& data, const std::string& type) {
     ui->avatarWidget->setAvatar(data, type);
-}
+  }
 
-ByteArray QtVCardPhotoAndNameFields::getAvatarData() const {
+  ByteArray QtVCardPhotoAndNameFields::getAvatarData() const {
     return ui->avatarWidget->getAvatarData();
-}
+  }
 
-std::string QtVCardPhotoAndNameFields::getAvatarType() const {
+  std::string QtVCardPhotoAndNameFields::getAvatarType() const {
     return ui->avatarWidget->getAvatarType();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setFormattedName(const QString& formattedName) {
+  void QtVCardPhotoAndNameFields::setFormattedName(const QString& formattedName) {
     ui->lineEditFN->setText(formattedName);
     ui->labelFN->setText(formattedName);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getFormattedName() const {
+  QString QtVCardPhotoAndNameFields::getFormattedName() const {
     return ui->lineEditFN->text();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setNickname(const QString& nickname) {
+  void QtVCardPhotoAndNameFields::setNickname(const QString& nickname) {
     ui->lineEditNICKNAME->setText(nickname);
     ui->labelNICKNAME->setText(nickname);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getNickname() const {
+  QString QtVCardPhotoAndNameFields::getNickname() const {
     return ui->lineEditNICKNAME->text();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setPrefix(const QString& prefix) {
+  void QtVCardPhotoAndNameFields::setPrefix(const QString& prefix) {
     ui->lineEditPREFIX->setText(prefix);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getPrefix() const {
+  QString QtVCardPhotoAndNameFields::getPrefix() const {
     return ui->lineEditPREFIX->text();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setGivenName(const QString& givenName) {
+  void QtVCardPhotoAndNameFields::setGivenName(const QString& givenName) {
     ui->lineEditGIVEN->setText(givenName);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getGivenName() const {
+  QString QtVCardPhotoAndNameFields::getGivenName() const {
     return ui->lineEditGIVEN->text();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setMiddleName(const QString& middleName) {
+  void QtVCardPhotoAndNameFields::setMiddleName(const QString& middleName) {
     ui->lineEditMIDDLE->setText(middleName);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getMiddleName() const {
+  QString QtVCardPhotoAndNameFields::getMiddleName() const {
     return ui->lineEditMIDDLE->text();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setFamilyName(const QString& familyName) {
+  void QtVCardPhotoAndNameFields::setFamilyName(const QString& familyName) {
     ui->lineEditFAMILY->setText(familyName);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getFamilyName() const {
+  QString QtVCardPhotoAndNameFields::getFamilyName() const {
     return ui->lineEditFAMILY->text();
-}
+  }
 
-void QtVCardPhotoAndNameFields::setSuffix(const QString& suffix) {
+  void QtVCardPhotoAndNameFields::setSuffix(const QString& suffix) {
     ui->lineEditSUFFIX->setText(suffix);
-}
+  }
 
-QString QtVCardPhotoAndNameFields::getSuffix() const {
+  QString QtVCardPhotoAndNameFields::getSuffix() const {
     return ui->lineEditSUFFIX->text();
-}
+  }
 
-}
+} // namespace Swift

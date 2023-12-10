@@ -68,7 +68,7 @@
 
 namespace Swift {
 
-QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventStream* eventStream, SettingsProvider* settings, QtSettingsProvider* qtOnlySettings, const std::map<std::string, std::string>& emoticonsMap) : QtTabbable(), id_(Q2PSTRING(contact)), contact_(contact), nextAlertId_(0), eventStream_(eventStream), settings_(settings), qtOnlySettings_(qtOnlySettings), blockingState_(BlockingUnsupported), isMUC_(false), supportsImpromptuChat_(false), roomBookmarkState_(RoomNotBookmarked), emoticonsMap_(emoticonsMap) {
+  QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventStream* eventStream, SettingsProvider* settings, QtSettingsProvider* qtOnlySettings, const std::map<std::string, std::string>& emoticonsMap) : QtTabbable(), id_(Q2PSTRING(contact)), contact_(contact), nextAlertId_(0), eventStream_(eventStream), settings_(settings), qtOnlySettings_(qtOnlySettings), blockingState_(BlockingUnsupported), isMUC_(false), supportsImpromptuChat_(false), roomBookmarkState_(RoomNotBookmarked), emoticonsMap_(emoticonsMap) {
     unreadCount_ = 0;
     isOnline_ = true;
     completer_ = nullptr;
@@ -84,8 +84,8 @@ QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventSt
 
     alertStyleSheet_ = ".QWidget, QTextEdit { background: rgb(255, 255, 153); color: black }";
 
-    QBoxLayout *layout = new QBoxLayout(QBoxLayout::TopToBottom, this);
-    layout->setContentsMargins(0,0,0,0);
+    QBoxLayout* layout = new QBoxLayout(QBoxLayout::TopToBottom, this);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(2);
 
     alertLayout_ = new QVBoxLayout();
@@ -108,10 +108,10 @@ QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventSt
     logRosterSplitter_->setAutoFillBackground(true);
     layout->addWidget(logRosterSplitter_);
     if (settings_->getSetting(QtUISettingConstants::USE_PLAIN_CHATS) || settings_->getSetting(QtUISettingConstants::USE_SCREENREADER)) {
-        messageLog_ = new QtPlainChatView(this, eventStream_);
+      messageLog_ = new QtPlainChatView(this, eventStream_);
     }
     else {
-        messageLog_ = new QtWebKitChatView(this, eventStream_, theme, this, settings); // I accept that passing the ChatWindow in so that the view can call the signals is somewhat inelegant, but it saves a lot of boilerplate. This patch is unpleasant enough already. So let's fix this soon (it at least needs fixing by the time history is sorted), but not now.
+      messageLog_ = new QtWebKitChatView(this, eventStream_, theme, this, settings); // I accept that passing the ChatWindow in so that the view can call the signals is somewhat inelegant, but it saves a lot of boilerplate. This patch is unpleasant enough already. So let's fix this soon (it at least needs fixing by the time history is sorted), but not now.
     }
     // When used with QSplitter and setChildrenCollapsible(false), the following prevents
     // this widget to be hidden, i.e. resized to zero width.
@@ -127,8 +127,8 @@ QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventSt
     midBar_ = new QWidget(this);
     //layout->addWidget(midBar);
     midBar_->setAutoFillBackground(true);
-    QHBoxLayout *midBarLayout = new QHBoxLayout(midBar_);
-    midBarLayout->setContentsMargins(0,0,0,0);
+    QHBoxLayout* midBarLayout = new QHBoxLayout(midBar_);
+    midBarLayout->setContentsMargins(0, 0, 0, 0);
     midBarLayout->setSpacing(2);
     //midBarLayout->addStretch();
 
@@ -136,12 +136,12 @@ QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventSt
     labelsWidget_->setFocusPolicy(Qt::NoFocus);
     labelsWidget_->hide();
     labelsWidget_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    midBarLayout->addWidget(labelsWidget_,0);
+    midBarLayout->addWidget(labelsWidget_, 0);
     connect(labelsWidget_, SIGNAL(currentIndexChanged(int)), this, SLOT(handleCurrentLabelChanged(int)));
     defaultLabelsPalette_ = labelsWidget_->palette();
 
     QHBoxLayout* inputBarLayout = new QHBoxLayout();
-    inputBarLayout->setContentsMargins(0,0,0,0);
+    inputBarLayout->setContentsMargins(0, 0, 0, 0);
     inputBarLayout->setSpacing(2);
     input_ = new QtTextEdit(settings_, this);
     input_->setAcceptRichText(false);
@@ -188,7 +188,7 @@ QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventSt
     midBar_->setFocusProxy(input_);
     messageLog_->setFocusProxy(input_);
     connect(messageLog_, SIGNAL(gotFocus()), input_, SLOT(setFocus()));
-    resize(400,300);
+    resize(400, 300);
     connect(messageLog_, SIGNAL(fontResized(int)), this, SIGNAL(fontResized(int)));
     connect(messageLog_, SIGNAL(logCleared()), this, SLOT(handleLogCleared()));
 
@@ -201,54 +201,55 @@ QtChatWindow::QtChatWindow(const QString& contact, QtChatTheme* theme, UIEventSt
 
     dayChangeTimer = new QTimer(this);
     dayChangeTimer->setSingleShot(true);
-    connect(dayChangeTimer, &QTimer::timeout, [this](){
-        addSystemMessage(ChatMessage(Q2PSTRING(tr("The day is now %1").arg(QDateTime::currentDateTime().date().toString(Qt::SystemLocaleLongDate)))), ChatWindow::DefaultDirection);
-        onContinuationsBroken();
-        resetDayChangeTimer();
+    connect(dayChangeTimer, &QTimer::timeout, [this]() {
+      //addSystemMessage(ChatMessage(Q2PSTRING(tr("The day is now %1").arg(QDateTime::currentDateTime().date().toString(Qt::SystemLocaleLongDate)))), ChatWindow::DefaultDirection);
+      addSystemMessage(ChatMessage(Q2PSTRING(tr("The day is now %1").arg(QDateTime::currentDateTime().date().toString(QLocale::system().dateTimeFormat())))), ChatWindow::DefaultDirection);
+      onContinuationsBroken();
+      resetDayChangeTimer();
     });
 
     resetDayChangeTimer();
-}
+  }
 
-QtChatWindow::~QtChatWindow() {
+  QtChatWindow::~QtChatWindow() {
     dayChangeTimer->stop();
     settings_->onSettingChanged.disconnect(boost::bind(&QtChatWindow::handleSettingChanged, this, _1));
     if (mucConfigurationWindow_) {
-        delete mucConfigurationWindow_.data();
+      delete mucConfigurationWindow_.data();
     }
-}
+  }
 
-void QtChatWindow::handleSettingChanged(const std::string& setting) {
+  void QtChatWindow::handleSettingChanged(const std::string& setting) {
     if (setting == QtUISettingConstants::SHOW_EMOTICONS.getKey()) {
-        bool showEmoticons = settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS);
-        messageLog_->showEmoticons(showEmoticons);
+      bool showEmoticons = settings_->getSetting(QtUISettingConstants::SHOW_EMOTICONS);
+      messageLog_->showEmoticons(showEmoticons);
     }
-}
+  }
 
-void QtChatWindow::handleLogCleared() {
+  void QtChatWindow::handleLogCleared() {
     onContinuationsBroken();
-}
+  }
 
-void QtChatWindow::handleOccupantSelectionChanged(RosterItem* item) {
+  void QtChatWindow::handleOccupantSelectionChanged(RosterItem* item) {
     onOccupantSelectionChanged(dynamic_cast<ContactRosterItem*>(item));
-}
+  }
 
-void QtChatWindow::handleFontResized(int fontSizeSteps) {
+  void QtChatWindow::handleFontResized(int fontSizeSteps) {
     messageLog_->resizeFont(fontSizeSteps);
-}
+  }
 
-void QtChatWindow::handleAlertButtonClicked() {
+  void QtChatWindow::handleAlertButtonClicked() {
     const QObject* alertWidget = QObject::sender()->parent();
     std::map<AlertID, QWidget*>::const_iterator i = alertWidgets_.begin();
-    for ( ; i != alertWidgets_.end(); ++i) {
-        if (i->second == alertWidget) {
-            removeAlert(i->first);
-            break;
-        }
+    for (; i != alertWidgets_.end(); ++i) {
+      if (i->second == alertWidget) {
+        removeAlert(i->first);
+        break;
+      }
     }
-}
+  }
 
-QtChatWindow::AlertID QtChatWindow::addAlert(const std::string& alertText) {
+  QtChatWindow::AlertID QtChatWindow::addAlert(const std::string& alertText) {
     QWidget* alertWidget = new QWidget(this);
     QHBoxLayout* alertLayout = new QHBoxLayout(alertWidget);
     alertLayout_->addWidget(alertWidget);
@@ -258,10 +259,10 @@ QtChatWindow::AlertID QtChatWindow::addAlert(const std::string& alertText) {
 
     QToolButton* closeButton = new QToolButton(alertWidget);
     closeButton->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
-    closeButton->setIconSize(QSize(16,16));
+    closeButton->setIconSize(QSize(16, 16));
     closeButton->setCursor(Qt::ArrowCursor);
     closeButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
-    connect (closeButton, SIGNAL(clicked()), this, SLOT(handleAlertButtonClicked()));
+    connect(closeButton, SIGNAL(clicked()), this, SLOT(handleAlertButtonClicked()));
 
     alertLayout->addWidget(closeButton);
     QPalette palette = alertWidget->palette();
@@ -273,60 +274,60 @@ QtChatWindow::AlertID QtChatWindow::addAlert(const std::string& alertText) {
     AlertID id = nextAlertId_++;
     alertWidgets_[id] = alertWidget;
     return id;
-}
+  }
 
-void QtChatWindow::removeAlert(const AlertID id) {
+  void QtChatWindow::removeAlert(const AlertID id) {
     std::map<AlertID, QWidget*>::iterator i = alertWidgets_.find(id);
     if (i != alertWidgets_.end()) {
-        alertLayout_->removeWidget(i->second);
-        delete i->second;
-        alertWidgets_.erase(i);
+      alertLayout_->removeWidget(i->second);
+      delete i->second;
+      alertWidgets_.erase(i);
     }
-}
+  }
 
-void QtChatWindow::setTabComplete(TabComplete* completer) {
+  void QtChatWindow::setTabComplete(TabComplete* completer) {
     completer_ = completer;
-}
+  }
 
-void QtChatWindow::handleKeyPressEvent(QKeyEvent* event) {
+  void QtChatWindow::handleKeyPressEvent(QKeyEvent* event) {
     event->ignore();
     if (event->isAccepted()) {
-        return;
+      return;
     }
     event->accept();
 
     int key = event->key();
     if (key == Qt::Key_Tab) {
-        tabComplete();
+      tabComplete();
     }
     else if ((key == Qt::Key_Up) && input_->toPlainText().isEmpty() && !(lastSentMessage_.isEmpty())) {
-        beginCorrection();
+      beginCorrection();
     }
     else if (key == Qt::Key_Down && isCorrection_ && input_->textCursor().atBlockEnd()) {
-        cancelCorrection();
+      cancelCorrection();
     }
     else if (key == Qt::Key_Down || key == Qt::Key_Up) {
-        event->ignore();
+      event->ignore();
     }
     else {
-        messageLog_->handleKeyPressEvent(event);
+      messageLog_->handleKeyPressEvent(event);
     }
-}
+  }
 
-void QtChatWindow::beginCorrection() {
+  void QtChatWindow::beginCorrection() {
     boost::optional<AlertID> newCorrectingAlert;
     if (correctionEnabled_ == Maybe) {
-        newCorrectingAlert = addAlert(Q2PSTRING(tr("This chat may not support message correction. If you send a correction anyway, it may appear as a duplicate message")));
+      newCorrectingAlert = addAlert(Q2PSTRING(tr("This chat may not support message correction. If you send a correction anyway, it may appear as a duplicate message")));
     }
     else if (correctionEnabled_ == No) {
-        newCorrectingAlert = addAlert(Q2PSTRING(tr("This chat does not support message correction.  If you send a correction anyway, it will appear as a duplicate message")));
+      newCorrectingAlert = addAlert(Q2PSTRING(tr("This chat does not support message correction.  If you send a correction anyway, it will appear as a duplicate message")));
     }
 
     if (newCorrectingAlert) {
-        if (correctingAlert_) {
-            removeAlert(*correctingAlert_);
-        }
-        correctingAlert_ = newCorrectingAlert;
+      if (correctingAlert_) {
+        removeAlert(*correctingAlert_);
+      }
+      correctingAlert_ = newCorrectingAlert;
     }
 
     QTextCursor cursor = input_->textCursor();
@@ -338,12 +339,12 @@ void QtChatWindow::beginCorrection() {
     correctingLabel_->show();
     input_->setCorrectionHighlight(true);
     labelsWidget_->setEnabled(false);
-}
+  }
 
-void QtChatWindow::cancelCorrection() {
+  void QtChatWindow::cancelCorrection() {
     if (correctingAlert_) {
-        removeAlert(*correctingAlert_);
-        correctingAlert_.reset();
+      removeAlert(*correctingAlert_);
+      correctingAlert_.reset();
     }
     QTextCursor cursor = input_->textCursor();
     cursor.select(QTextCursor::Document);
@@ -352,44 +353,45 @@ void QtChatWindow::cancelCorrection() {
     correctingLabel_->hide();
     input_->setCorrectionHighlight(false);
     labelsWidget_->setEnabled(true);
-}
+  }
 
-QByteArray QtChatWindow::getSplitterState() {
+  QByteArray QtChatWindow::getSplitterState() {
     return logRosterSplitter_->saveState();
-}
+  }
 
-void QtChatWindow::handleChangeSplitterState(QByteArray state) {
+  void QtChatWindow::handleChangeSplitterState(QByteArray state) {
     logRosterSplitter_->restoreState(state);
 #ifdef SWIFTEN_PLATFORM_MACOSX
     logRosterSplitter_->setHandleWidth(0);
 #endif
     logRosterSplitter_->setChildrenCollapsible(false);
-}
+  }
 
-void QtChatWindow::handleSplitterMoved(int, int) {
+  void QtChatWindow::handleSplitterMoved(int, int) {
     emit splitterMoved();
-}
+  }
 
-void QtChatWindow::tabComplete() {
+  void QtChatWindow::tabComplete() {
     if (!completer_) {
-        return;
+      return;
     }
 
     QTextCursor cursor;
     if (tabCompleteCursor_.hasSelection()) {
-        cursor = tabCompleteCursor_;
+      cursor = tabCompleteCursor_;
     }
     else {
-        cursor = input_->textCursor();
-        while(cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor) && cursor.document()->characterAt(cursor.position() - 1) != ' ') { }
+      cursor = input_->textCursor();
+      while (cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor) && cursor.document()->characterAt(cursor.position() - 1) != ' ') {
+      }
     }
     QString root = cursor.selectedText();
     if (root.isEmpty()) {
-        return;
+      return;
     }
     QString suggestion = P2QSTRING(completer_->completeWord(Q2PSTRING(root)));
     if (root == suggestion) {
-        return;
+      return;
     }
     tabCompletion_ = true;
     cursor.beginEditBlock();
@@ -402,13 +404,13 @@ void QtChatWindow::tabComplete() {
 
     cursor.endEditBlock();
     tabCompletion_ = false;
-}
+  }
 
-void QtChatWindow::setRosterModel(Roster* roster) {
+  void QtChatWindow::setRosterModel(Roster* roster) {
     treeWidget_->setRosterModel(roster);
-}
+  }
 
-void QtChatWindow::setAvailableSecurityLabels(const std::vector<SecurityLabelsCatalog::Item>& labels) {
+  void QtChatWindow::setAvailableSecurityLabels(const std::vector<SecurityLabelsCatalog::Item>& labels) {
     delete labelModel_;
     labelModel_ = new LabelModel();
     labelModel_->availableLabels_ = labels;
@@ -416,148 +418,148 @@ void QtChatWindow::setAvailableSecurityLabels(const std::vector<SecurityLabelsCa
     int defaultIndex = 0;
     labelsWidget_->setModel(labelModel_);
     for (const auto& label : labels) {
-        if (label.getIsDefault()) {
-            defaultIndex = i;
-            break;
-        }
-        i++;
+      if (label.getIsDefault()) {
+        defaultIndex = i;
+        break;
+      }
+      i++;
     }
     labelsWidget_->setCurrentIndex(defaultIndex);
-}
+  }
 
-void QtChatWindow::handleCurrentLabelChanged(int index) {
+  void QtChatWindow::handleCurrentLabelChanged(int index) {
     if (static_cast<size_t>(index) >= labelModel_->availableLabels_.size()) {
-        SWIFT_LOG(debug) << "User selected a label that doesn't exist";
-        return;
+      SWIFT_LOG(debug) << "User selected a label that doesn't exist";
+      return;
     }
     const SecurityLabelsCatalog::Item& label = labelModel_->availableLabels_[index];
     if (label.getLabel()) {
-        QPalette palette = labelsWidget_->palette();
-        //palette.setColor(QPalette::Base, P2QSTRING(label.getLabel()->getBackgroundColor()));
-        palette.setColor(labelsWidget_->backgroundRole(), P2QSTRING(label.getLabel()->getBackgroundColor()));
-        palette.setColor(labelsWidget_->foregroundRole(), P2QSTRING(label.getLabel()->getForegroundColor()));
-        labelsWidget_->setPalette(palette);
-        midBar_->setPalette(palette);
-        labelsWidget_->setAutoFillBackground(true);
+      QPalette palette = labelsWidget_->palette();
+      //palette.setColor(QPalette::Base, P2QSTRING(label.getLabel()->getBackgroundColor()));
+      palette.setColor(labelsWidget_->backgroundRole(), P2QSTRING(label.getLabel()->getBackgroundColor()));
+      palette.setColor(labelsWidget_->foregroundRole(), P2QSTRING(label.getLabel()->getForegroundColor()));
+      labelsWidget_->setPalette(palette);
+      midBar_->setPalette(palette);
+      labelsWidget_->setAutoFillBackground(true);
     }
     else {
-        labelsWidget_->setAutoFillBackground(false);
-        labelsWidget_->setPalette(defaultLabelsPalette_);
-        midBar_->setPalette(defaultLabelsPalette_);
+      labelsWidget_->setAutoFillBackground(false);
+      labelsWidget_->setPalette(defaultLabelsPalette_);
+      midBar_->setPalette(defaultLabelsPalette_);
     }
-}
+  }
 
-void QtChatWindow::setSecurityLabelsError() {
+  void QtChatWindow::setSecurityLabelsError() {
     labelsWidget_->setEnabled(false);
-}
+  }
 
-void QtChatWindow::setSecurityLabelsEnabled(bool enabled) {
+  void QtChatWindow::setSecurityLabelsEnabled(bool enabled) {
     if (enabled) {
-        labelsWidget_->setEnabled(true);
-        labelsWidget_->show();
+      labelsWidget_->setEnabled(true);
+      labelsWidget_->show();
     }
     else {
-        labelsWidget_->hide();
+      labelsWidget_->hide();
     }
-}
+  }
 
-void QtChatWindow::setCorrectionEnabled(Tristate enabled) {
+  void QtChatWindow::setCorrectionEnabled(Tristate enabled) {
     correctionEnabled_ = enabled;
-}
+  }
 
-void QtChatWindow::setFileTransferEnabled(Tristate enabled) {
+  void QtChatWindow::setFileTransferEnabled(Tristate enabled) {
     fileTransferEnabled_ = enabled;
-}
+  }
 
-SecurityLabelsCatalog::Item QtChatWindow::getSelectedSecurityLabel() {
+  SecurityLabelsCatalog::Item QtChatWindow::getSelectedSecurityLabel() {
     assert(labelsWidget_->isEnabled());
     assert(labelsWidget_->currentIndex() >= 0 && static_cast<size_t>(labelsWidget_->currentIndex()) < labelModel_->availableLabels_.size());
     return labelModel_->availableLabels_[labelsWidget_->currentIndex()];
-}
+  }
 
-void QtChatWindow::closeEvent(QCloseEvent* event) {
+  void QtChatWindow::closeEvent(QCloseEvent* event) {
     event->accept();
     emit windowClosing();
     onClosed();
-}
+  }
 
-void QtChatWindow::convertToMUC(MUCType mucType) {
+  void QtChatWindow::convertToMUC(MUCType mucType) {
     impromptu_ = (mucType == ImpromptuMUC);
     isMUC_ = true;
     treeWidget_->show();
     subject_->setVisible(!impromptu_);
-}
+  }
 
-void QtChatWindow::setOnline(bool online) {
+  void QtChatWindow::setOnline(bool online) {
     isOnline_ = online;
     if (!online) {
-        if (mucConfigurationWindow_) {
-            delete mucConfigurationWindow_.data();
-        }
-        if (affiliationEditor_) {
-            delete affiliationEditor_.data();
-        }
+      if (mucConfigurationWindow_) {
+        delete mucConfigurationWindow_.data();
+      }
+      if (affiliationEditor_) {
+        delete affiliationEditor_.data();
+      }
     }
-}
+  }
 
-void QtChatWindow::showEvent(QShowEvent* event) {
+  void QtChatWindow::showEvent(QShowEvent* event) {
     emit windowOpening();
     QWidget::showEvent(event);
-}
+  }
 
-void QtChatWindow::setUnreadMessageCount(size_t count) {
+  void QtChatWindow::setUnreadMessageCount(size_t count) {
     if (unreadCount_ != count) {
-        unreadCount_ = count;
-        updateTitleWithUnreadCount();
-        emit countUpdated();
+      unreadCount_ = count;
+      updateTitleWithUnreadCount();
+      emit countUpdated();
     }
-}
+  }
 
-void QtChatWindow::setContactChatState(ChatState::ChatStateType state) {
+  void QtChatWindow::setContactChatState(ChatState::ChatStateType state) {
     contactIsTyping_ = (state == ChatState::Composing);
     emit titleUpdated();
-}
+  }
 
-QtTabbable::AlertType QtChatWindow::getWidgetAlertState() {
+  QtTabbable::AlertType QtChatWindow::getWidgetAlertState() {
     if (contactIsTyping_) {
-        return ImpendingActivity;
+      return ImpendingActivity;
     }
     if (unreadCount_ > 0) {
-        return WaitingActivity;
+      return WaitingActivity;
     }
     return NoActivity;
-}
+  }
 
-void QtChatWindow::setName(const std::string& name) {
+  void QtChatWindow::setName(const std::string& name) {
     contact_ = P2QSTRING(name);
     updateTitleWithUnreadCount();
-}
+  }
 
-void QtChatWindow::updateTitleWithUnreadCount() {
+  void QtChatWindow::updateTitleWithUnreadCount() {
     if (isWindow()) {
-        setWindowTitle(unreadCount_ > 0 ? QString("(%1) %2").arg(unreadCount_).arg(contact_) : contact_);
+      setWindowTitle(unreadCount_ > 0 ? QString("(%1) %2").arg(unreadCount_).arg(contact_) : contact_);
     }
     else {
-        setWindowTitle(contact_);
+      setWindowTitle(contact_);
     }
     emit titleUpdated();
-}
+  }
 
-void QtChatWindow::flash() {
+  void QtChatWindow::flash() {
     emit requestFlash();
-}
+  }
 
-size_t QtChatWindow::getCount() {
+  size_t QtChatWindow::getCount() {
     return unreadCount_;
-}
+  }
 
-void QtChatWindow::replaceSystemMessage(const ChatWindow::ChatMessage& message, const std::string& id, const ChatWindow::TimestampBehaviour timestampBehaviour) {
+  void QtChatWindow::replaceSystemMessage(const ChatWindow::ChatMessage& message, const std::string& id, const ChatWindow::TimestampBehaviour timestampBehaviour) {
     messageLog_->replaceSystemMessage(message, id, timestampBehaviour);
-}
+  }
 
-void QtChatWindow::returnPressed() {
+  void QtChatWindow::returnPressed() {
     if (!isOnline_ || (blockingState_ == IsBlocked)) {
-        return;
+      return;
     }
     messageLog_->scrollToBottom();
     lastSentMessage_ = QString(input_->toPlainText());
@@ -566,143 +568,142 @@ void QtChatWindow::returnPressed() {
     input_->clear();
     cancelCorrection();
     inputClearing_ = false;
-}
+  }
 
-void QtChatWindow::handleInputChanged() {
+  void QtChatWindow::handleInputChanged() {
     if (inputClearing_) {
-        return;
+      return;
     }
     if (input_->toPlainText().isEmpty()) {
-        onUserCancelsTyping();
+      onUserCancelsTyping();
     }
     else {
-        onUserTyping();
+      onUserTyping();
     }
-}
+  }
 
-void QtChatWindow::handleCursorPositionChanged() {
+  void QtChatWindow::handleCursorPositionChanged() {
     if (tabCompletion_) {
-        return;
+      return;
     }
     tabCompleteCursor_.clearSelection();
-}
+  }
 
-void QtChatWindow::show() {
+  void QtChatWindow::show() {
     if (parentWidget() == nullptr) {
-        QWidget::show();
+      QWidget::show();
     }
     emit windowOpening();
-}
+  }
 
-bool QtChatWindow::isVisible() const {
+  bool QtChatWindow::isVisible() const {
     return QWidget::isVisible();
-}
+  }
 
-void QtChatWindow::activate() {
+  void QtChatWindow::activate() {
     if (isWindow()) {
-        QWidget::show();
+      QWidget::show();
     }
     emit wantsToActivate();
     input_->setFocus();
-}
+  }
 
-void QtChatWindow::resizeEvent(QResizeEvent*) {
+  void QtChatWindow::resizeEvent(QResizeEvent*) {
     emit geometryChanged();
-}
+  }
 
-void QtChatWindow::moveEvent(QMoveEvent*) {
+  void QtChatWindow::moveEvent(QMoveEvent*) {
     emit geometryChanged();
-}
+  }
 
-void QtChatWindow::dragEnterEvent(QDragEnterEvent *event) {
+  void QtChatWindow::dragEnterEvent(QDragEnterEvent* event) {
     if (isOnline_ && (blockingState_ != IsBlocked)) {
-        if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() == 1) {
-            if (!isMUC_ && fileTransferEnabled_ == Yes) {
-                event->acceptProposedAction();
-            }
+      if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() == 1) {
+        if (!isMUC_ && fileTransferEnabled_ == Yes) {
+          event->acceptProposedAction();
         }
-        else if (event->mimeData()->hasFormat("application/vnd.swift.contact-jid-list")) {
-            if (isMUC_ || supportsImpromptuChat_) {
-                // Prevent invitations or impromptu initializations for contacts that you are already chatting to.
-                std::vector<JID> droppedJIDs =jidListFromQByteArray(event->mimeData()->data("application/vnd.swift.contact-jid-list"));
-                std::set<JID> conversationJIDs;
-                if (isMUC_) {
-                    conversationJIDs = treeWidget_->getRoster()->getJIDs();
-                }
+      }
+      else if (event->mimeData()->hasFormat("application/vnd.swift.contact-jid-list")) {
+        if (isMUC_ || supportsImpromptuChat_) {
+          // Prevent invitations or impromptu initializations for contacts that you are already chatting to.
+          std::vector<JID> droppedJIDs = jidListFromQByteArray(event->mimeData()->data("application/vnd.swift.contact-jid-list"));
+          std::set<JID> conversationJIDs;
+          if (isMUC_) {
+            conversationJIDs = treeWidget_->getRoster()->getJIDs();
+          }
 
-                for (std::vector<JID>::iterator i = droppedJIDs.begin(); i != droppedJIDs.end(); ) {
-                    const JID& droppedJID = *i;
-                    if (conversationJIDs.find(droppedJID) != conversationJIDs.end()) {
-                        i = droppedJIDs.erase(i);
-                    }
-                    else {
-                        ++i;
-                    }
-                }
-
-                if (droppedJIDs.empty()) {
-                    event->ignore();
-                }
-                else {
-                    event->acceptProposedAction();
-                }
+          for (std::vector<JID>::iterator i = droppedJIDs.begin(); i != droppedJIDs.end();) {
+            const JID& droppedJID = *i;
+            if (conversationJIDs.find(droppedJID) != conversationJIDs.end()) {
+              i = droppedJIDs.erase(i);
             }
+            else {
+              ++i;
+            }
+          }
+
+          if (droppedJIDs.empty()) {
+            event->ignore();
+          }
+          else {
+            event->acceptProposedAction();
+          }
         }
+      }
     }
-}
+  }
 
-void QtChatWindow::dropEvent(QDropEvent *event) {
+  void QtChatWindow::dropEvent(QDropEvent* event) {
     if (fileTransferEnabled_ == Yes && event->mimeData()->hasUrls()) {
-        if (event->mimeData()->urls().size() == 1) {
-            onSendFileRequest(Q2PSTRING(event->mimeData()->urls().at(0).toLocalFile()));
-        }
-        else {
-            std::string messageText(Q2PSTRING(tr("Sending of multiple files at once isn't supported at this time.")));
-            ChatMessage message;
-            message.append(std::make_shared<ChatTextMessagePart>(messageText));
-            addSystemMessage(message, DefaultDirection);
-        }
+      if (event->mimeData()->urls().size() == 1) {
+        onSendFileRequest(Q2PSTRING(event->mimeData()->urls().at(0).toLocalFile()));
+      }
+      else {
+        std::string messageText(Q2PSTRING(tr("Sending of multiple files at once isn't supported at this time.")));
+        ChatMessage message;
+        message.append(std::make_shared<ChatTextMessagePart>(messageText));
+        addSystemMessage(message, DefaultDirection);
+      }
     }
     else if (event->mimeData()->hasFormat("application/vnd.swift.contact-jid-list")) {
-        std::vector<JID> invites = jidListFromQByteArray(event->mimeData()->data("application/vnd.swift.contact-jid-list"));
-        onInviteToChat(invites);
+      std::vector<JID> invites = jidListFromQByteArray(event->mimeData()->data("application/vnd.swift.contact-jid-list"));
+      onInviteToChat(invites);
     }
-}
+  }
 
-std::vector<JID> QtChatWindow::jidListFromQByteArray(const QByteArray& dataBytes) {
+  std::vector<JID> QtChatWindow::jidListFromQByteArray(const QByteArray& dataBytes) {
     QDataStream dataStream(dataBytes);
     std::vector<JID> invites;
     while (!dataStream.atEnd()) {
-        QString jidString;
-        dataStream >> jidString;
-        invites.push_back(Q2PSTRING(jidString));
+      QString jidString;
+      dataStream >> jidString;
+      invites.push_back(Q2PSTRING(jidString));
     }
     return invites;
-}
+  }
 
-void QtChatWindow::resetDayChangeTimer() {
+  void QtChatWindow::resetDayChangeTimer() {
     assert(dayChangeTimer);
     // Add a second so the handled is definitly called on the next day, and not multiple times exactly at midnight.
     dayChangeTimer->start(QtUtilities::secondsToNextMidnight(QDateTime::currentDateTime()) * 1000 + 1000);
-}
+  }
 
-void QtChatWindow::setAvailableOccupantActions(const std::vector<OccupantAction>& actions) {
+  void QtChatWindow::setAvailableOccupantActions(const std::vector<OccupantAction>& actions) {
     treeWidget_->setAvailableOccupantActions(actions);
-}
+  }
 
-void QtChatWindow::setSubject(const std::string& subject) {
+  void QtChatWindow::setSubject(const std::string& subject) {
     //subject_->setVisible(!subject.empty());
     subject_->setText(P2QSTRING(subject));
     subject_->setToolTip(P2QSTRING(subject));
     subject_->setCursorPosition(0);
-}
+  }
 
-void QtChatWindow::handleEmojisButtonClicked() {
+  void QtChatWindow::handleEmojisButtonClicked() {
     // Create QtEmojisSelector and QMenu
     emojisGrid_ = new QtEmojisSelector(qtOnlySettings_->getQSettings(), emoticonsMap_);
     auto emojisLayout = new QVBoxLayout();
-    emojisLayout->setContentsMargins(style()->pixelMetric(QStyle::PM_MenuHMargin),style()->pixelMetric(QStyle::PM_MenuVMargin),
-                                     style()->pixelMetric(QStyle::PM_MenuHMargin),style()->pixelMetric(QStyle::PM_MenuVMargin));
+    emojisLayout->setContentsMargins(style()->pixelMetric(QStyle::PM_MenuHMargin), style()->pixelMetric(QStyle::PM_MenuVMargin), style()->pixelMetric(QStyle::PM_MenuHMargin), style()->pixelMetric(QStyle::PM_MenuVMargin));
     emojisLayout->addWidget(emojisGrid_);
     emojisMenu_ = std::make_unique<QMenu>();
     emojisMenu_->setLayout(emojisLayout);
@@ -712,39 +713,39 @@ void QtChatWindow::handleEmojisButtonClicked() {
 
     QSize menuSize = emojisMenu_->size();
     emojisMenu_->exec(QPoint(QCursor::pos().x() - menuSize.width(), QCursor::pos().y() - menuSize.height()));
-}
+  }
 
-void QtChatWindow::handleEmojiClicked(QString emoji) {
+  void QtChatWindow::handleEmojiClicked(QString emoji) {
     if (isVisible()) {
-        input_->textCursor().insertText(emoji);
-        input_->setFocus();
-        // We cannot delete the emojisGrid_
-        // Grid may not close yet and we should not try to destroy it.
-        emojisMenu_->setVisible(false);
+      input_->textCursor().insertText(emoji);
+      input_->setFocus();
+      // We cannot delete the emojisGrid_
+      // Grid may not close yet and we should not try to destroy it.
+      emojisMenu_->setVisible(false);
     }
-}
+  }
 
-void QtChatWindow::handleTextInputReceivedFocus() {
+  void QtChatWindow::handleTextInputReceivedFocus() {
     lastLineTracker_.setHasFocus(true);
     input_->setFocus();
     if (focusTimer_) {
-        focusTimer_->stop();
+      focusTimer_->stop();
     }
     else {
-        focusTimer_ = std::make_unique<QTimer>(this);
-        focusTimer_->setSingleShot(true);
-        focusTimer_->setTimerType(Qt::CoarseTimer);
-        connect(focusTimer_.get(), &QTimer::timeout, this, &QtChatWindow::handleFocusTimerTick);
+      focusTimer_ = std::make_unique<QTimer>(this);
+      focusTimer_->setSingleShot(true);
+      focusTimer_->setTimerType(Qt::CoarseTimer);
+      connect(focusTimer_.get(), &QTimer::timeout, this, &QtChatWindow::handleFocusTimerTick);
     }
     focusTimer_->setInterval(1000);
     focusTimer_->start();
-}
+  }
 
-void QtChatWindow::handleTextInputLostFocus() {
+  void QtChatWindow::handleTextInputLostFocus() {
     lastLineTracker_.setHasFocus(false);
-}
+  }
 
-void QtChatWindow::handleActionButtonClicked() {
+  void QtChatWindow::handleActionButtonClicked() {
     QMenu contextMenu;
     QAction* changeSubject = nullptr;
     QAction* configure = nullptr;
@@ -757,271 +758,265 @@ void QtChatWindow::handleActionButtonClicked() {
     QAction* unblock = nullptr;
 
     if (availableRoomActions_.empty()) {
-        if (blockingState_ == IsBlocked) {
-            unblock = contextMenu.addAction(tr("Unblock"));
-            unblock->setEnabled(isOnline_);
-        }
-        else if (!isMUC_ && blockingState_ == IsUnblocked) {
-            block = contextMenu.addAction(tr("Block"));
-            block->setEnabled(isOnline_);
-        }
+      if (blockingState_ == IsBlocked) {
+        unblock = contextMenu.addAction(tr("Unblock"));
+        unblock->setEnabled(isOnline_);
+      }
+      else if (!isMUC_ && blockingState_ == IsUnblocked) {
+        block = contextMenu.addAction(tr("Block"));
+        block->setEnabled(isOnline_);
+      }
 
-        if (supportsImpromptuChat_) {
-            invite = contextMenu.addAction(tr("Invite person to this chat…"));
-            invite->setEnabled(isOnline_ && (blockingState_ != IsBlocked));
-        }
-
+      if (supportsImpromptuChat_) {
+        invite = contextMenu.addAction(tr("Invite person to this chat…"));
+        invite->setEnabled(isOnline_ && (blockingState_ != IsBlocked));
+      }
     }
     else {
-        for (auto&& availableAction : availableRoomActions_) {
-            if (impromptu_) {
-                // hide options we don't need in impromptu chats
-                if (availableAction == ChatWindow::ChangeSubject ||
-                    availableAction == ChatWindow::Configure ||
-                    availableAction == ChatWindow::Affiliations ||
-                    availableAction == ChatWindow::Destroy) {
-                    continue;
-                }
-            }
-            switch(availableAction)
-            {
-                case ChatWindow::ChangeSubject:
-                    changeSubject = contextMenu.addAction(tr("Change subject…"));
-                    changeSubject->setEnabled(isOnline_);
-                    break;
-                case ChatWindow::Configure:
-                    configure = contextMenu.addAction(tr("Configure room…"));
-                    configure->setEnabled(isOnline_);
-                    break;
-                case ChatWindow::Affiliations:
-                    affiliations = contextMenu.addAction(tr("Edit affiliations…"));
-                    affiliations->setEnabled(isOnline_);
-                    break;
-                case ChatWindow::Destroy:
-                    destroy = contextMenu.addAction(tr("Destroy room"));
-                    destroy->setEnabled(isOnline_);
-                    break;
-                case ChatWindow::Invite:
-                    invite = contextMenu.addAction(tr("Invite person to this room…"));
-                    invite->setEnabled(isOnline_);
-                    break;
-                case ChatWindow::Leave:
-                    leave = contextMenu.addAction(tr("Leave room"));
-                    leave->setEnabled(isOnline_);
-                    break;
-            }
+      for (auto&& availableAction : availableRoomActions_) {
+        if (impromptu_) {
+          // hide options we don't need in impromptu chats
+          if (availableAction == ChatWindow::ChangeSubject || availableAction == ChatWindow::Configure || availableAction == ChatWindow::Affiliations || availableAction == ChatWindow::Destroy) {
+            continue;
+          }
         }
+        switch (availableAction) {
+          case ChatWindow::ChangeSubject:
+            changeSubject = contextMenu.addAction(tr("Change subject…"));
+            changeSubject->setEnabled(isOnline_);
+            break;
+          case ChatWindow::Configure:
+            configure = contextMenu.addAction(tr("Configure room…"));
+            configure->setEnabled(isOnline_);
+            break;
+          case ChatWindow::Affiliations:
+            affiliations = contextMenu.addAction(tr("Edit affiliations…"));
+            affiliations->setEnabled(isOnline_);
+            break;
+          case ChatWindow::Destroy:
+            destroy = contextMenu.addAction(tr("Destroy room"));
+            destroy->setEnabled(isOnline_);
+            break;
+          case ChatWindow::Invite:
+            invite = contextMenu.addAction(tr("Invite person to this room…"));
+            invite->setEnabled(isOnline_);
+            break;
+          case ChatWindow::Leave:
+            leave = contextMenu.addAction(tr("Leave room"));
+            leave->setEnabled(isOnline_);
+            break;
+        }
+      }
     }
 
     QAction* bookmark = nullptr;
     if (isMUC_) {
-        if (roomBookmarkState_ == RoomNotBookmarked) {
-            bookmark = contextMenu.addAction(tr("Bookmark this room..."));
-        }
-        else {
-            bookmark = contextMenu.addAction(tr("Edit bookmark..."));
-        }
-        bookmark->setEnabled(isOnline_);
+      if (roomBookmarkState_ == RoomNotBookmarked) {
+        bookmark = contextMenu.addAction(tr("Bookmark this room..."));
+      }
+      else {
+        bookmark = contextMenu.addAction(tr("Edit bookmark..."));
+      }
+      bookmark->setEnabled(isOnline_);
     }
 
     QAction* result = contextMenu.exec(QCursor::pos());
     if (result == nullptr) {
-        /* Skip processing. Note that otherwise, because the actions could be null they could match */
+      /* Skip processing. Note that otherwise, because the actions could be null they could match */
     }
     else if (result == changeSubject) {
-        bool ok;
-        QString subject = QInputDialog::getText(this, tr("Change room subject"), tr("New subject:"), QLineEdit::Normal, subject_->text(), &ok);
-        if (ok) {
-            onChangeSubjectRequest(Q2PSTRING(subject));
-        }
+      bool ok;
+      QString subject = QInputDialog::getText(this, tr("Change room subject"), tr("New subject:"), QLineEdit::Normal, subject_->text(), &ok);
+      if (ok) {
+        onChangeSubjectRequest(Q2PSTRING(subject));
+      }
     }
     else if (result == configure) {
-        onConfigureRequest(Form::ref());
+      onConfigureRequest(Form::ref());
     }
     else if (result == affiliations) {
-        if (!affiliationEditor_) {
-            onGetAffiliationsRequest();
-            affiliationEditor_ = new QtAffiliationEditor(this);
-            connect(affiliationEditor_, SIGNAL(accepted()), this, SLOT(handleAffiliationEditorAccepted()));
-        }
-        affiliationEditor_->show();
+      if (!affiliationEditor_) {
+        onGetAffiliationsRequest();
+        affiliationEditor_ = new QtAffiliationEditor(this);
+        connect(affiliationEditor_, SIGNAL(accepted()), this, SLOT(handleAffiliationEditorAccepted()));
+      }
+      affiliationEditor_->show();
     }
     else if (result == destroy) {
-        QMessageBox msgBox;
-        msgBox.setWindowTitle(tr("Confirm room destruction"));
-        msgBox.setText(tr("Are you sure you want to destroy the room?"));
-        msgBox.setInformativeText(tr("This will destroy the room."));
-        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-        msgBox.setDefaultButton(QMessageBox::No);
-        if (msgBox.exec() == QMessageBox::Yes) {
-            onDestroyRequest();
-        }
+      QMessageBox msgBox;
+      msgBox.setWindowTitle(tr("Confirm room destruction"));
+      msgBox.setText(tr("Are you sure you want to destroy the room?"));
+      msgBox.setInformativeText(tr("This will destroy the room."));
+      msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+      msgBox.setDefaultButton(QMessageBox::No);
+      if (msgBox.exec() == QMessageBox::Yes) {
+        onDestroyRequest();
+      }
     }
     else if (result == invite) {
-        onInviteToChat(std::vector<JID>());
+      onInviteToChat(std::vector<JID>());
     }
     else if (result == leave) {
-        close();
+      close();
     }
     else if (result == block) {
-        onBlockUserRequest();
+      onBlockUserRequest();
     }
     else if (result == unblock) {
-        onUnblockUserRequest();
+      onUnblockUserRequest();
     }
     else if (result == bookmark) {
-        onBookmarkRequest();
+      onBookmarkRequest();
     }
-}
+  }
 
-void QtChatWindow::handleAffiliationEditorAccepted() {
+  void QtChatWindow::handleAffiliationEditorAccepted() {
     onChangeAffiliationsRequest(affiliationEditor_->getChanges());
-}
+  }
 
-void QtChatWindow::setAffiliations(MUCOccupant::Affiliation affiliation, const std::vector<JID>& jids) {
-    if (!affiliationEditor_) return;
+  void QtChatWindow::setAffiliations(MUCOccupant::Affiliation affiliation, const std::vector<JID>& jids) {
+    if (!affiliationEditor_)
+      return;
     affiliationEditor_->setAffiliations(affiliation, jids);
-}
+  }
 
-void QtChatWindow::setAvailableRoomActions(const std::vector<RoomAction>& actions) {
+  void QtChatWindow::setAvailableRoomActions(const std::vector<RoomAction>& actions) {
     availableRoomActions_ = actions;
-}
+  }
 
-void QtChatWindow::setBlockingState(BlockingState state) {
+  void QtChatWindow::setBlockingState(BlockingState state) {
     blockingState_ = state;
-}
+  }
 
-void QtChatWindow::setCanInitiateImpromptuChats(bool supportsImpromptu) {
+  void QtChatWindow::setCanInitiateImpromptuChats(bool supportsImpromptu) {
     supportsImpromptuChat_ = supportsImpromptu;
-}
+  }
 
-void QtChatWindow::showBookmarkWindow(const MUCBookmark& bookmark) {
+  void QtChatWindow::showBookmarkWindow(const MUCBookmark& bookmark) {
     if (roomBookmarkState_ != RoomNotBookmarked) {
-        QtEditBookmarkWindow* window = new QtEditBookmarkWindow(eventStream_, bookmark);
-        window->show();
+      QtEditBookmarkWindow* window = new QtEditBookmarkWindow(eventStream_, bookmark);
+      window->show();
     }
-#ifndef  NOT_YET
+#ifndef NOT_YET
     else {
-        QtAddBookmarkWindow* window = new QtAddBookmarkWindow(eventStream_, bookmark);
-        window->show();
+      QtAddBookmarkWindow* window = new QtAddBookmarkWindow(eventStream_, bookmark);
+      window->show();
     }
 #endif // ! NOT_YET
-}
+  }
 
-std::string QtChatWindow::getID() const {
+  std::string QtChatWindow::getID() const {
     return id_;
-}
+  }
 
-void QtChatWindow::setEmphasiseFocus(bool emphasise) {
+  void QtChatWindow::setEmphasiseFocus(bool emphasise) {
     input_->setEmphasiseFocus(emphasise);
-}
+  }
 
-void QtChatWindow::showRoomConfigurationForm(Form::ref form) {
+  void QtChatWindow::showRoomConfigurationForm(Form::ref form) {
     if (mucConfigurationWindow_) {
-        delete mucConfigurationWindow_.data();
+      delete mucConfigurationWindow_.data();
     }
     mucConfigurationWindow_ = new QtMUCConfigurationWindow(form);
     mucConfigurationWindow_->onFormComplete.connect(boost::bind(boost::ref(onConfigureRequest), _1));
     mucConfigurationWindow_->onFormCancelled.connect(boost::bind(boost::ref(onConfigurationFormCancelled)));
-}
+  }
 
-void QtChatWindow::handleAppendedToLog() {
+  void QtChatWindow::handleAppendedToLog() {
     if (lastLineTracker_.getShouldMoveLastLine()) {
-        /* should this be queued? */
-        messageLog_->addLastSeenLine();
+      /* should this be queued? */
+      messageLog_->addLastSeenLine();
     }
     if (isWidgetSelected()) {
-        onAllMessagesRead();
+      onAllMessagesRead();
     }
-}
+  }
 
-void QtChatWindow::addMUCInvitation(const std::string& senderName, const JID& jid, const std::string& reason, const std::string& password, bool direct, bool isImpromptu, bool isContinuation) {
+  void QtChatWindow::addMUCInvitation(const std::string& senderName, const JID& jid, const std::string& reason, const std::string& password, bool direct, bool isImpromptu, bool isContinuation) {
     handleAppendedToLog();
     messageLog_->addMUCInvitation(senderName, jid, reason, password, direct, isImpromptu, isContinuation);
-}
+  }
 
-std::string QtChatWindow::addMessage(const ChatMessage& message, const std::string& senderName, bool senderIsSelf, std::shared_ptr<SecurityLabel> label, const std::string& avatarPath, const boost::posix_time::ptime& time) {
+  std::string QtChatWindow::addMessage(const ChatMessage& message, const std::string& senderName, bool senderIsSelf, std::shared_ptr<SecurityLabel> label, const std::string& avatarPath, const boost::posix_time::ptime& time) {
     handleAppendedToLog();
     return messageLog_->addMessage(message, senderName, senderIsSelf, label, avatarPath, time);
-}
+  }
 
-std::string QtChatWindow::addAction(const ChatMessage& message, const std::string& senderName, bool senderIsSelf, std::shared_ptr<SecurityLabel> label, const std::string& avatarPath, const boost::posix_time::ptime& time) {
+  std::string QtChatWindow::addAction(const ChatMessage& message, const std::string& senderName, bool senderIsSelf, std::shared_ptr<SecurityLabel> label, const std::string& avatarPath, const boost::posix_time::ptime& time) {
     handleAppendedToLog();
     return messageLog_->addAction(message, senderName, senderIsSelf, label, avatarPath, time);
-}
+  }
 
-
-std::string QtChatWindow::addSystemMessage(const ChatMessage& message, Direction direction) {
+  std::string QtChatWindow::addSystemMessage(const ChatMessage& message, Direction direction) {
     handleAppendedToLog();
     return messageLog_->addSystemMessage(message, direction);
-}
+  }
 
-void QtChatWindow::addPresenceMessage(const ChatMessage& message, Direction direction) {
+  void QtChatWindow::addPresenceMessage(const ChatMessage& message, Direction direction) {
     handleAppendedToLog();
     messageLog_->addPresenceMessage(message, direction);
-}
+  }
 
-void QtChatWindow::addErrorMessage(const ChatMessage& message) {
+  void QtChatWindow::addErrorMessage(const ChatMessage& message) {
     handleAppendedToLog();
     messageLog_->addErrorMessage(message);
-}
+  }
 
-
-void QtChatWindow::replaceMessage(const ChatMessage& message, const std::string& id, const boost::posix_time::ptime& time) {
+  void QtChatWindow::replaceMessage(const ChatMessage& message, const std::string& id, const boost::posix_time::ptime& time) {
     handleAppendedToLog();
     messageLog_->replaceMessage(message, id, time);
-}
+  }
 
-void QtChatWindow::replaceWithAction(const ChatMessage& message, const std::string& id, const boost::posix_time::ptime& time) {
+  void QtChatWindow::replaceWithAction(const ChatMessage& message, const std::string& id, const boost::posix_time::ptime& time) {
     handleAppendedToLog();
     messageLog_->replaceWithAction(message, id, time);
-}
+  }
 
-std::string QtChatWindow::addFileTransfer(const std::string& senderName, const std::string& avatarPath, bool senderIsSelf, const std::string& filename, const boost::uintmax_t sizeInBytes, const std::string& description) {
+  std::string QtChatWindow::addFileTransfer(const std::string& senderName, const std::string& avatarPath, bool senderIsSelf, const std::string& filename, const boost::uintmax_t sizeInBytes, const std::string& description) {
     handleAppendedToLog();
     return messageLog_->addFileTransfer(senderName, avatarPath, senderIsSelf, filename, sizeInBytes, description);
-}
+  }
 
-void QtChatWindow::setFileTransferProgress(std::string id, const int percentageDone) {
+  void QtChatWindow::setFileTransferProgress(std::string id, const int percentageDone) {
     messageLog_->setFileTransferProgress(id, percentageDone);
-}
+  }
 
-void QtChatWindow::setFileTransferStatus(std::string id, const FileTransferState state, const std::string& msg) {
+  void QtChatWindow::setFileTransferStatus(std::string id, const FileTransferState state, const std::string& msg) {
     messageLog_->setFileTransferStatus(id, state, msg);
-}
+  }
 
-std::string QtChatWindow::addWhiteboardRequest(bool senderIsSelf) {
+  std::string QtChatWindow::addWhiteboardRequest(bool senderIsSelf) {
     handleAppendedToLog();
     return messageLog_->addWhiteboardRequest(contact_, senderIsSelf);
-}
+  }
 
-void QtChatWindow::setWhiteboardSessionStatus(std::string id, const ChatWindow::WhiteboardSessionState state) {
+  void QtChatWindow::setWhiteboardSessionStatus(std::string id, const ChatWindow::WhiteboardSessionState state) {
     messageLog_->setWhiteboardSessionStatus(id, state);
-}
+  }
 
-void QtChatWindow::replaceLastMessage(const ChatMessage& message, const TimestampBehaviour timestampBehaviour) {
+  void QtChatWindow::replaceLastMessage(const ChatMessage& message, const TimestampBehaviour timestampBehaviour) {
     messageLog_->replaceLastMessage(message, timestampBehaviour);
-}
+  }
 
-void QtChatWindow::setAckState(const std::string& id, AckState state) {
+  void QtChatWindow::setAckState(const std::string& id, AckState state) {
     messageLog_->setAckState(id, state);
-}
+  }
 
-void QtChatWindow::setMessageReceiptState(const std::string& id, ChatWindow::ReceiptState state) {
+  void QtChatWindow::setMessageReceiptState(const std::string& id, ChatWindow::ReceiptState state) {
     messageLog_->setMessageReceiptState(id, state);
-}
+  }
 
-void QtChatWindow::setBookmarkState(RoomBookmarkState bookmarkState) {
+  void QtChatWindow::setBookmarkState(RoomBookmarkState bookmarkState) {
     roomBookmarkState_ = bookmarkState;
-}
+  }
 
-void QtChatWindow::setChatSecurityMarking(const std::string& markingValue, const std::string& markingForegroundColorValue, const std::string& markingBackgroundColorValue) {
+  void QtChatWindow::setChatSecurityMarking(const std::string& markingValue, const std::string& markingForegroundColorValue, const std::string& markingBackgroundColorValue) {
     auto layout = static_cast<QBoxLayout*>(this->layout());
 
     if (securityMarkingLayout_) {
-        layout->removeItem(securityMarkingLayout_);
-        securityMarkingLayout_->removeWidget(securityMarkingDisplay_);
-        delete securityMarkingLayout_;
+      layout->removeItem(securityMarkingLayout_);
+      securityMarkingLayout_->removeWidget(securityMarkingDisplay_);
+      delete securityMarkingLayout_;
     }
     delete securityMarkingDisplay_;
 
@@ -1036,14 +1031,14 @@ void QtChatWindow::setChatSecurityMarking(const std::string& markingValue, const
     palette.setColor(securityMarkingDisplay_->backgroundRole(), P2QSTRING(markingBackgroundColorValue));
 
     securityMarkingDisplay_->setPalette(palette);
-    securityMarkingDisplay_->setContentsMargins(4,4,4,4);
+    securityMarkingDisplay_->setContentsMargins(4, 4, 4, 4);
     securityMarkingDisplay_->setAutoFillBackground(true);
     securityMarkingDisplay_->setAlignment(Qt::AlignCenter);
-}
+  }
 
-void QtChatWindow::removeChatSecurityMarking() {
+  void QtChatWindow::removeChatSecurityMarking() {
     if (!securityMarkingLayout_) {
-        return;
+      return;
     }
 
     auto layout = static_cast<QBoxLayout*>(this->layout());
@@ -1055,20 +1050,20 @@ void QtChatWindow::removeChatSecurityMarking() {
     delete securityMarkingLayout_;
     securityMarkingDisplay_ = nullptr;
     securityMarkingLayout_ = nullptr;
-}
+  }
 
-void QtChatWindow::handleFocusTimerTick() {
+  void QtChatWindow::handleFocusTimerTick() {
     if (hasFocus()) {
-        onAllMessagesRead();
+      onAllMessagesRead();
     }
     focusTimer_.reset();
-}
+  }
 
-void QtChatWindow::resendMessage(const std::string& id) {
+  void QtChatWindow::resendMessage(const std::string& id) {
     if (!isOnline_ || (blockingState_ == IsBlocked)) {
-        return;
+      return;
     }
     onResendMessageRequest(id);
-}
+  }
 
-}
+} // namespace Swift

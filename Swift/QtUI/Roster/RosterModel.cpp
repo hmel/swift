@@ -99,9 +99,9 @@ namespace Swift {
     switch (role) {
       case Qt::DisplayRole:
         return getScreenReaderTextOr(item, P2QSTRING(item->getDisplayName()));
-      case Qt::TextColorRole:
+      case Qt::ForegroundRole:
         return getTextColor(item);
-      case Qt::BackgroundColorRole:
+      case Qt::BackgroundRole:
         return getBackgroundColor(item);
       case Qt::ToolTipRole:
         return getToolTip(item);

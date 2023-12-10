@@ -7,8 +7,7 @@
 #include <Swift/QtUI/QtUtilities.h>
 
 #include <QtGui>
-#if defined (Q_OS_UNIX) && !defined(Q_OS_MAC)
-#include <QX11Info>
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #endif
@@ -20,9 +19,8 @@
 
 namespace QtUtilities {
 
-
-void setX11Resource(QWidget* widget, const QString& c) {
-#if defined (Q_OS_UNIX) && !defined(Q_OS_MAC) && QT_VERSION < 0x050000
+  void setX11Resource(QWidget* widget, const QString& c) {
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC) && QT_VERSION < 0x050000
     char res_class[] = SWIFT_APPLICATION_NAME;
     XClassHint hint;
     QByteArray resName = (QString(SWIFT_APPLICATION_NAME) + "-" + c).toUtf8();
@@ -30,25 +28,25 @@ void setX11Resource(QWidget* widget, const QString& c) {
     hint.res_class = res_class;
     XSetClassHint(widget->x11Info().display(), widget->winId(), &hint);
 #else
-    (void) widget;
-    (void) c;
+    (void)widget;
+    (void)c;
 #endif
-}
+  }
 
-QString htmlEscape(const QString& s) {
+  QString htmlEscape(const QString& s) {
 #if QT_VERSION >= 0x050000
     return s.toHtmlEscaped();
 #else
     return Qt::escape(s);
 #endif
-}
+  }
 
-long long secondsToNextMidnight(const QDateTime& currentTime) {
+  long long secondsToNextMidnight(const QDateTime& currentTime) {
     auto secondsToMidnight = 0ll;
     auto nextMidnight = currentTime.addDays(1);
-    nextMidnight.setTime(QTime(0,0));
+    nextMidnight.setTime(QTime(0, 0));
     secondsToMidnight = currentTime.secsTo(nextMidnight);
     return secondsToMidnight;
-}
+  }
 
-}
+} // namespace QtUtilities

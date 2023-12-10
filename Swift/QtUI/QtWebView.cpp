@@ -4,95 +4,90 @@
  * See the COPYING file for more information.
  */
 
-
 #include <Swift/QtUI/QtWebView.h>
 
 #include <QFocusEvent>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QMenu>
+#include <QPainter>
 
 #include <Swiften/Base/Log.h>
 
 namespace Swift {
-QtWebView::QtWebView(QWidget* parent) : QWebView(parent), fontSizeIsMinimal(false) {
-    setRenderHint(QPainter::SmoothPixmapTransform);
-    filteredActions.push_back(QWebPage::CopyLinkToClipboard);
-    filteredActions.push_back(QWebPage::CopyImageToClipboard);
-    filteredActions.push_back(QWebPage::Copy);
+  QtWebView::QtWebView(QWidget* parent) : QWebEngineView(parent), fontSizeIsMinimal(false) {
+    //setRenderHint(QPainter::SmoothPixmapTransform);
+    filteredActions.push_back(QWebEnginePage::CopyLinkToClipboard);
+    filteredActions.push_back(QWebEnginePage::CopyImageToClipboard);
+    filteredActions.push_back(QWebEnginePage::Copy);
     if (Log::getLogLevel() == Log::debug) {
-        filteredActions.push_back(QWebPage::InspectElement);
+      filteredActions.push_back(QWebEnginePage::InspectElement);
     }
-}
+  }
 
-void QtWebView::keyPressEvent(QKeyEvent* event) {
+  void QtWebView::keyPressEvent(QKeyEvent* event) {
     Qt::KeyboardModifiers modifiers = event->modifiers();
     int key = event->key();
     if (event->matches(QKeySequence::ZoomIn) || (key == Qt::Key_Equal && (modifiers & Qt::ControlModifier))) {
-        event->accept();
-        emit fontGrowRequested();
-        return;
+      event->accept();
+      emit fontGrowRequested();
+      return;
     }
     if (event->matches(QKeySequence::ZoomOut) || (key == Qt::Key_Minus && (modifiers & Qt::ControlModifier))) {
-        event->accept();
-        emit fontShrinkRequested();
-        return;
+      event->accept();
+      emit fontShrinkRequested();
+      return;
     }
     if (modifiers == Qt::ShiftModifier && (key == Qt::Key_PageUp || key == Qt::Key_PageDown)) {
-        modifiers = Qt::NoModifier;
+      modifiers = Qt::NoModifier;
     }
-    QKeyEvent* translatedEvent = new QKeyEvent(QEvent::KeyPress,
-                               key,
-                               modifiers,
-                               event->text(),
-                               event->isAutoRepeat(),
-                               event->count());
-    QWebView::keyPressEvent(translatedEvent);
+    QKeyEvent* translatedEvent = new QKeyEvent(QEvent::KeyPress, key, modifiers, event->text(), event->isAutoRepeat(), event->count());
+    QWebEngineView::keyPressEvent(translatedEvent);
     delete translatedEvent;
-}
+  }
 
-void QtWebView::dragEnterEvent(QDragEnterEvent*) {
+  void QtWebView::dragEnterEvent(QDragEnterEvent*) {}
 
-}
-
-void QtWebView::setFontSizeIsMinimal(bool minimum) {
+  void QtWebView::setFontSizeIsMinimal(bool minimum) {
     fontSizeIsMinimal = minimum;
-}
+  }
 
-void QtWebView::contextMenuEvent(QContextMenuEvent* ev) {
+  void QtWebView::contextMenuEvent(QContextMenuEvent* ev) {
     // Filter out the relevant actions from the standard actions
 
+#if 0
     QMenu* menu = page()->createStandardContextMenu();
     QList<QAction*> actions(menu->actions());
     for (auto action : actions) {
-        bool removeAction = true;
-        for(auto& filteredAction : filteredActions) {
-            if (action == pageAction(filteredAction)) {
-                removeAction = false;
-                break;
-            }
+      bool removeAction = true;
+      for (auto& filteredAction : filteredActions) {
+        if (action == pageAction(filteredAction)) {
+          removeAction = false;
+          break;
         }
-        if (removeAction) {
-            menu->removeAction(action);
-        }
-    }
+      }
+      if (removeAction) {
+        menu->removeAction(action);
+      }
+  }
 
-    // Add our own custom actions
-    menu->addAction(tr("Clear"), this, SIGNAL(clearRequested()));
-    menu->addAction(tr("Increase font size"), this, SIGNAL(fontGrowRequested()), QKeySequence(QKeySequence::ZoomIn));
-    QAction* shrink = new QAction(tr("Decrease font size"), this);
-    shrink->setShortcut(QKeySequence(QKeySequence::ZoomOut));
-    shrink->setEnabled(!fontSizeIsMinimal);
-    connect(shrink, SIGNAL(triggered()), this, SIGNAL(fontShrinkRequested()));
-    menu->addAction(shrink);
+  // Add our own custom actions
+  menu->addAction(tr("Clear"), this, SIGNAL(clearRequested()));
+  menu->addAction(tr("Increase font size"), this, SIGNAL(fontGrowRequested()), QKeySequence(QKeySequence::ZoomIn));
+  QAction* shrink = new QAction(tr("Decrease font size"), this);
+  shrink->setShortcut(QKeySequence(QKeySequence::ZoomOut));
+  shrink->setEnabled(!fontSizeIsMinimal);
+  connect(shrink, SIGNAL(triggered()), this, SIGNAL(fontShrinkRequested()));
+  menu->addAction(shrink);
 
-    menu->exec(ev->globalPos());
-    delete menu;
-}
+  menu->exec(ev->globalPos());
+  delete menu;
+#endif //0
+  }
 
-void QtWebView::focusInEvent(QFocusEvent* event) {
-    QWebView::focusInEvent(event);
+  void QtWebView::focusInEvent(QFocusEvent* event) {
+    QWebEngineView::focusInEvent(event);
     emit gotFocus();
-}
+  }
 
-}
+} // namespace Swift

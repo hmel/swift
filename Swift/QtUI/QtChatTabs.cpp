@@ -369,9 +369,12 @@ namespace Swift {
   void QtChatTabs::handleOpenLayoutChangeDialog() {
     disconnect(gridSelectionDialog_, SIGNAL(currentGridSizeChanged(QSize)), dynamicGrid_, SLOT(setDimensions(QSize)));
     gridSelectionDialog_->setCurrentGridSize(dynamicGrid_->getDimension());
-
+    /*
     int screen = QApplication::desktop()->screenNumber(QCursor::pos());
     QPoint center = QApplication::desktop()->screenGeometry(screen).center();
+    */
+    QScreen* screen = QApplication::screenAt(QCursor::pos());
+    QPoint center = screen->geometry().center();
     gridSelectionDialog_->move(center);
 
     connect(gridSelectionDialog_, SIGNAL(currentGridSizeChanged(QSize)), dynamicGrid_, SLOT(setDimensions(QSize)));

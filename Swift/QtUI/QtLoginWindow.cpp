@@ -20,7 +20,6 @@ using namespace boost::placeholders;
 #include <QComboBox>
 #include <QCursor>
 #include <QDebug>
-#include <QDesktopWidget>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -77,7 +76,7 @@ namespace Swift {
     QBoxLayout* topLayout = new QBoxLayout(QBoxLayout::TopToBottom, centralWidget);
     stack_ = new QStackedWidget(centralWidget);
     topLayout->addWidget(stack_);
-    topLayout->setMargin(0);
+    //topLayout->setMargin(0);
     loginWidgetWrapper_ = new QWidget(this);
     loginWidgetWrapper_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
     QBoxLayout* layout = new QBoxLayout(QBoxLayout::TopToBottom, loginWidgetWrapper_);
@@ -89,7 +88,7 @@ namespace Swift {
 
     QWidget* logoWidget = new QWidget(this);
     QHBoxLayout* logoLayout = new QHBoxLayout();
-    logoLayout->setMargin(0);
+    //logoLayout->setMargin(0);
     logoLayout->addStretch(0);
     logoLayout->addWidget(logo);
     logoLayout->addStretch(0);
@@ -126,7 +125,7 @@ namespace Swift {
     layout->addWidget(w);
 
     QHBoxLayout* credentialsLayout = new QHBoxLayout(w);
-    credentialsLayout->setMargin(0);
+    //credentialsLayout->setMargin(0);
     credentialsLayout->setSpacing(3);
     password_ = new QLineEdit(this);
     password_->setEchoMode(QLineEdit::Password);

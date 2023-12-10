@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include <QSound>
+#include <QSoundEffect>
 
 #include <Swiften/Base/Path.h>
 
@@ -18,29 +18,32 @@
 
 namespace Swift {
 
-QtSoundPlayer::QtSoundPlayer(ApplicationPathProvider* applicationPathProvider) : applicationPathProvider(applicationPathProvider) {
-}
+  QtSoundPlayer::QtSoundPlayer(ApplicationPathProvider* applicationPathProvider) : applicationPathProvider(applicationPathProvider) {}
 
-void QtSoundPlayer::playSound(SoundEffect sound, const std::string& soundResource) {
+  void QtSoundPlayer::playSound(SoundEffect sound, const std::string& soundResource) {
 
     switch (sound) {
-        case MessageReceived:
-            playSound(soundResource.empty() ? "/sounds/message-received.wav" : soundResource);
-            break;
+      case MessageReceived:
+        playSound(soundResource.empty() ? "/sounds/message-received.wav" : soundResource);
+        break;
     }
-}
+  }
 
-void QtSoundPlayer::playSound(const std::string& soundResource) {
+  void QtSoundPlayer::playSound(const std::string& soundResource) {
     boost::filesystem::path resourcePath = applicationPathProvider->getResourcePath(soundResource);
     if (boost::filesystem::exists(resourcePath)) {
-        QSound::play(P2QSTRING(pathToString(resourcePath)));
+      QSoundEffect effect;
+      effect.setSource(QUrl::fromLocalFile(P2QSTRING(pathToString(resourcePath))));
+      effect.play();
     }
     else if (boost::filesystem::exists(soundResource)) {
-        QSound::play(P2QSTRING(soundResource));
+      QSoundEffect effect;
+      effect.setSource(QUrl::fromLocalFile(P2QSTRING(pathToString(soundResource))));
+      effect.play();
     }
     else {
-        std::cerr << "Unable to find sound: " << soundResource << std::endl;
+      std::cerr << "Unable to find sound: " << soundResource << std::endl;
     }
-}
+  }
 
-}
+} // namespace Swift

@@ -17,43 +17,43 @@
 #include <Swift/QtUI/QtSwiftUtil.h>
 
 namespace Swift {
-    const int QtRecentEmojisGrid::MAX_RECENTS = 50;
+  const int QtRecentEmojisGrid::MAX_RECENTS = 50;
 
-    QtRecentEmojisGrid::QtRecentEmojisGrid(QSettings* settings) : QtEmojisGrid(), settings_(settings) {
-        loadSettings();
-        connect(this, SIGNAL(onEmojiSelected(QString)), this, SLOT(handleEmojiClicked(QString)));
-        refresh();
+  QtRecentEmojisGrid::QtRecentEmojisGrid(QSettings* settings) : QtEmojisGrid(), settings_(settings) {
+    loadSettings();
+    connect(this, SIGNAL(onEmojiSelected(QString)), this, SLOT(handleEmojiClicked(QString)));
+    refresh();
+  }
+
+  QtRecentEmojisGrid::~QtRecentEmojisGrid() {
+    writeSettings();
+  }
+
+  void QtRecentEmojisGrid::handleEmojiClicked(QString emoji) {
+    recents_.erase(std::remove(recents_.begin(), recents_.end(), emoji), recents_.end());
+
+    if (recents_.size() > MAX_RECENTS) {
+      recents_.resize(MAX_RECENTS - 1);
     }
 
-    QtRecentEmojisGrid::~QtRecentEmojisGrid() {
-        writeSettings();
-    }
+    recents_.push_front(emoji);
+    refresh();
+  }
 
-    void QtRecentEmojisGrid::handleEmojiClicked(QString emoji) {
-        recents_.erase(std::remove(recents_.begin(), recents_.end(), emoji), recents_.end());
+  void QtRecentEmojisGrid::refresh() {
+    QtEmojisGrid::setEmojis(recents_);
+  }
 
-        if (recents_.size() > MAX_RECENTS) {
-            recents_.resize(MAX_RECENTS - 1);
-        }
+  void QtRecentEmojisGrid::loadSettings() {
+    QByteArray readData = settings_->value("recentEmojis").toByteArray();
+    QDataStream readStream(&readData, QIODeviceBase::ReadOnly);
+    readStream >> recents_;
+  }
 
-        recents_.push_front(emoji);
-        refresh();
-    }
-
-    void QtRecentEmojisGrid::refresh() {
-        QtEmojisGrid::setEmojis(recents_);
-    }
-
-    void QtRecentEmojisGrid::loadSettings() {
-        QByteArray readData = settings_->value("recentEmojis").toByteArray();
-        QDataStream readStream(&readData, QIODevice::ReadOnly);
-        readStream >> recents_;
-    }
-
-    void QtRecentEmojisGrid::writeSettings() {
-        QByteArray data;
-        QDataStream stream(&data, QIODevice::WriteOnly);
-        stream << recents_;
-        settings_->setValue("recentEmojis", data);
-    }
-}
+  void QtRecentEmojisGrid::writeSettings() {
+    QByteArray data;
+    QDataStream stream(&data, QIODeviceBase::WriteOnly);
+    stream << recents_;
+    settings_->setValue("recentEmojis", data);
+  }
+} // namespace Swift

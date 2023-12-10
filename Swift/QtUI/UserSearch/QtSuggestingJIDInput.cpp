@@ -19,7 +19,6 @@ using namespace boost::placeholders;
 
 #include <QAbstractItemView>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QKeyEvent>
 #include <QtGlobal>
 
@@ -170,10 +169,9 @@ namespace Swift {
   }
 
   void QtSuggestingJIDInput::positionPopup() {
-    QDesktopWidget* desktop = QApplication::desktop();
-    int screen = desktop->screenNumber(this);
     QPoint point = mapToGlobal(QPoint(0, height()));
-    QRect geometry = desktop->availableGeometry(screen);
+    QScreen* screen = QGuiApplication::screenAt(pos());
+    QRect geometry = screen->availableGeometry();
     int x = point.x();
     int y = point.y();
     int width = this->width();
@@ -191,9 +189,10 @@ namespace Swift {
     int marginTop;
     int marginRight;
     int marginBottom;
-    treeViewPopup_->getContentsMargins(&marginLeft, &marginTop, &marginRight, &marginBottom);
-    height += marginTop + marginBottom;
-    width += marginLeft + marginRight;
+    //treeViewPopup_->getContentsMargins(&marginLeft, &marginTop, &marginRight, &marginBottom);
+    auto cm = treeViewPopup_->contentsMargins();
+    height += cm.top() + cm.bottom();
+    width += cm.left() + cm.right();
 
     treeViewPopup_->setGeometry(x, y, width, height);
     treeViewPopup_->move(x, y);

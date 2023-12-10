@@ -19,33 +19,32 @@
 
 namespace Swift {
 
-QtCloseButton::QtCloseButton(QWidget *parent) : QAbstractButton(parent) {
+  QtCloseButton::QtCloseButton(QWidget* parent) : QAbstractButton(parent) {}
 
-}
-
-QSize QtCloseButton::sizeHint() const {
+  QSize QtCloseButton::sizeHint() const {
     return QSize(style()->pixelMetric(QStyle::PM_TabCloseIndicatorWidth, nullptr, nullptr), style()->pixelMetric(QStyle::PM_TabCloseIndicatorHeight, nullptr, nullptr));
-}
+  }
 
-bool QtCloseButton::event(QEvent *e) {
+  bool QtCloseButton::event(QEvent* e) {
     if (e->type() == QEvent::Enter || e->type() == QEvent::Leave) {
-        update();
+      update();
     }
     return QAbstractButton::event(e);
-}
+  }
 
-void QtCloseButton::paintEvent(QPaintEvent *) {
+  void QtCloseButton::paintEvent(QPaintEvent*) {
     QPainter painter(this);
-    painter.setRenderHint(QPainter::HighQualityAntialiasing);
+    //painter.setRenderHint(QPainter::HighQualityAntialiasing);
     QStyleOption opt;
-    opt.init(this);
+    opt.initFrom(this);
     opt.state |= QStyle::State_AutoRaise;
     if (underMouse() && !isDown()) {
-        opt.state |= QStyle::State_Raised;
-    } else if (isDown()) {
-        opt.state |= QStyle::State_Sunken;
+      opt.state |= QStyle::State_Raised;
+    }
+    else if (isDown()) {
+      opt.state |= QStyle::State_Sunken;
     }
     style()->drawPrimitive(QStyle::PE_IndicatorTabClose, &opt, &painter, this);
-}
+  }
 
-}
+} // namespace Swift

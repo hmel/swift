@@ -18,38 +18,34 @@
 
 namespace Swift {
 
-UserSearchDelegate::UserSearchDelegate(QObject* parent) : QStyledItemDelegate(parent) {
+  UserSearchDelegate::UserSearchDelegate(QObject* parent) : QStyledItemDelegate(parent) {}
 
-}
+  UserSearchDelegate::~UserSearchDelegate() {}
 
-UserSearchDelegate::~UserSearchDelegate() {
-
-}
-
-QSize UserSearchDelegate::sizeHint(const QStyleOptionViewItem& /*option*/, const QModelIndex& /*index*/ ) const {
+  QSize UserSearchDelegate::sizeHint(const QStyleOptionViewItem& /*option*/, const QModelIndex& /*index*/) const {
     //UserSearchItem* item = static_cast<UserSearchItem*>(index.internalPointer());
     QFontMetrics nameMetrics(common_.nameFont);
     QFontMetrics statusMetrics(common_.detailFont);
     int sizeByText = 2 * common_.verticalMargin + nameMetrics.height() + statusMetrics.height();
     return QSize(150, sizeByText);
-}
+  }
 
-void UserSearchDelegate::paint(QPainter* painter,    const QStyleOptionViewItem& option, const QModelIndex& index) const {
+  void UserSearchDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const {
     UserSearchResult* item = static_cast<UserSearchResult*>(index.internalPointer());
     painter->save();
     QRect fullRegion(option.rect);
     if (option.state & QStyle::State_Selected) {
-        painter->fillRect(fullRegion, option.palette.highlight());
-        painter->setPen(option.palette.highlightedText().color());
+      painter->fillRect(fullRegion, option.palette.highlight());
+      painter->setPen(option.palette.highlightedText().color());
     }
     else {
-        QColor nameColor = UserSearchModel::data(item, Qt::TextColorRole).value<QColor> ();
-        painter->setPen(QPen(nameColor));
+      QColor nameColor = UserSearchModel::data(item, Qt::ForegroundRole).value<QColor>();
+      painter->setPen(QPen(nameColor));
     }
 
     QFontMetrics nameMetrics(common_.nameFont);
     painter->setFont(common_.nameFont);
-    int extraFontWidth = nameMetrics.width("H");
+    int extraFontWidth = nameMetrics.boundingRect("H").width();
     int leftOffset = common_.horizontalMargin * 2 + extraFontWidth / 2;
     QRect textRegion(fullRegion.adjusted(leftOffset, 0, 0, 0));
 
@@ -65,6 +61,6 @@ void UserSearchDelegate::paint(QPainter* painter,    const QStyleOptionViewItem&
     painter->drawText(detailRegion, Qt::AlignTop, UserSearchModel::data(item, UserSearchModel::DetailTextRole).toString());
 
     painter->restore();
-}
+  }
 
-}
+} // namespace Swift
