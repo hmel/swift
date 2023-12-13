@@ -103,7 +103,7 @@ namespace Swift {
     connect(eventWindow_, SIGNAL(onNewEventCountUpdated(int)), this, SLOT(handleEventCountUpdated(int)));
 
     chatListWindow_ = new QtChatListWindow(uiEventStream_, settings_);
-    connect(chatListWindow_, SIGNAL(onCountUpdated(int)), this, SLOT(handleChatCountUpdated(int)));
+    //connect(chatListWindow_, SIGNAL(onCountUpdated(int)), this, SLOT(handleChatCountUpdated(int)));
 
     tabs_->addTab(chatListWindow_, tr("C&hats"));
     tabs_->addTab(eventWindow_, tr("&Notices"));

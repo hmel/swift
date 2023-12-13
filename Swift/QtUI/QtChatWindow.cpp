@@ -187,7 +187,7 @@ namespace Swift {
     logRosterSplitter_->setFocusProxy(input_);
     midBar_->setFocusProxy(input_);
     messageLog_->setFocusProxy(input_);
-    connect(messageLog_, SIGNAL(gotFocus()), input_, SLOT(setFocus()));
+    //connect(messageLog_, SIGNAL(gotFocus()), input_, SLOT(setFocus()));
     resize(400, 300);
     connect(messageLog_, SIGNAL(fontResized(int)), this, SIGNAL(fontResized(int)));
     connect(messageLog_, SIGNAL(logCleared()), this, SLOT(handleLogCleared()));
