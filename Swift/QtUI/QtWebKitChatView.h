@@ -50,12 +50,12 @@ namespace Swift {
     ~QtWebKitChatView() override;
 
     /** Add message to window.
-             * @return id of added message (for acks).
-             */
+     * @return id of added message (for acks).
+     */
     virtual std::string addMessage(const ChatWindow::ChatMessage& message, const std::string& senderName, bool senderIsSelf, std::shared_ptr<SecurityLabel> label, const std::string& avatarPath, const boost::posix_time::ptime& time) override;
     /** Adds action to window.
-             * @return id of added message (for acks);
-             */
+     * @return id of added message (for acks);
+     */
     virtual std::string addAction(const ChatWindow::ChatMessage& message, const std::string& senderName, bool senderIsSelf, std::shared_ptr<SecurityLabel> label, const std::string& avatarPath, const boost::posix_time::ptime& time) override;
 
     virtual std::string addSystemMessage(const ChatWindow::ChatMessage& message, ChatWindow::Direction direction) override;

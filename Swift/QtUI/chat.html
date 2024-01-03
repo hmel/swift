@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <script>
+     function addMessage(messageText, timestamp) {
+         message = document.createElement('li');
+         message.innerText = messageText;
+         message.className = 'me';
+         list = document.getElementById('chat');
+         list.appendChild(message);
+         list.lastElementChild.scrollIntoView();
+     }
+    </script>
+    <head>
+        <style>
+         ul{
+             list-style: none;
+             margin: 0;
+             padding: 0;
+         }
+
+         ul li{
+             display:inline-block;
+             clear: both;
+             padding: 20px;
+             border-radius: 30px;
+             margin-bottom: 2px;
+             font-family: Helvetica, Arial, sans-serif;
+         }
+
+         .him{
+             background: #eee;
+             float: left;
+         }
+
+         .me{
+             float: right;
+             background: #0084ff;
+             color: #fff;
+         }
+
+         .him + .me{
+             border-bottom-right-radius: 5px;
+         }
+
+         .me + .me{
+             border-top-right-radius: 5px;
+             border-bottom-right-radius: 5px;
+         }
+
+         .me:last-of-type {
+             border-bottom-right-radius: 30px;
+         }
+        </style>
+    </head>
+    <body>
+        <div id="chatView">
+        <ul id="chat">
+            <li class="him">By Other User</li>
+            <li class="me">By this User, first message</li>
+            <li class="me">By this User, secondmessage</li>
+            <li class="me">By this User, third message</li>
+            <li class="me">By this User, fourth message</li>
+        </ul>
+        </div>
+    </body>
+</html>

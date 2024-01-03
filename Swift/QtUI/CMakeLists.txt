@@ -169,6 +169,8 @@ set(SWIFT_SRCS
   Swift.qrc
 )
 
+set(CHATVIEW_SRCS ChatView/main.cpp)
+
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -207,3 +209,23 @@ target_link_libraries(Swift Qt6::Core Qt6::Gui Qt6::DBus Qt6::WebEngineWidgets Q
 )
 
 target_include_directories(Swift PRIVATE ../../ ../ QtVCardWidget/)
+
+add_executable(ChatView ${CHATVIEW_SRCS})
+target_link_libraries(ChatView Qt6::Core Qt6::Gui Qt6::DBus Qt6::WebEngineWidgets Qt6::Widgets Qt6::Multimedia Qt6::WebEngineCore
+  swift_controllers
+  swift_tools
+  swiften
+  Boost::filesystem
+  Boost::program_options
+  Boost::serialization
+  Boost::regex
+  Boost::serialization
+  resolv
+  ssl
+  crypto
+  expat
+  ${IDN_LIBRARIES}
+  z
+)
+
+target_include_directories(ChatView PRIVATE ../../ ../ QtVCardWidget/)

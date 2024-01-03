@@ -133,7 +133,6 @@ namespace Swift {
   }
 
   void QtWebKitChatView::addMessageBottom(std::shared_ptr<ChatSnippet> snippet) {
-#if 0
     if (viewReady_) {
       addToDOM(snippet);
     }
@@ -141,7 +140,6 @@ namespace Swift {
       /* If this asserts, the previous queuing code was necessary and should be reinstated */
       assert(false);
     }
-#endif //0
   }
 
   void QtWebKitChatView::addMessageTop(std::shared_ptr<ChatSnippet> /* snippet */) {
